@@ -1,0 +1,49 @@
+### --- Maven --- ###
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+### --- IntelliJ IDEA --- ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+modules.xml
+
+### --- Windows--- ###
+Thumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+### --- Logs --- ###
+logs/
+*.log
+*.log.*
+
+### --- Arquivos de Ambiente e Sensíveis --- ###
+*.env
+*.secret
+application.properties
+application-*.properties
+!application-exemplo.properties
+config/application-local.properties
+
+### --- Arquivos Gerados pela Aplicação --- ###
+uploads/
+tmp/
+temp/
+
+### --- Outros --- ###
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.class
+.DS_Store
+.mvn/wrapper/maven-wrapper.jar
