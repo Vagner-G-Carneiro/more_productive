@@ -34,4 +34,5 @@ Pré Requisitos: Java 21
 
 # Autor/Desenvolvedor
 Vagner Guimarães Carneiro
-LinkedIn: https://www.linkedin.com/in/vagnergcarneiro
+
+LinkedIn => https://www.linkedin.com/in/vagnergcarneiro
