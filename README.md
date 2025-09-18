@@ -33,5 +33,5 @@ Pré Requisitos: Java 21
 ## Front
 
 # Autor/Desenvolvedor
-## Vagner Guimarães Carneiro
-### LinkedIn: https://www.linkedin.com/in/vagnergcarneiro
+Vagner Guimarães Carneiro
+LinkedIn: https://www.linkedin.com/in/vagnergcarneiro
