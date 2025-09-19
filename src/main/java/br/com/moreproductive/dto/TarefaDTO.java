@@ -2,21 +2,37 @@ package br.com.moreproductive.dto;
 
 import br.com.moreproductive.enums.PrioridadeTarefaEnum;
 import br.com.moreproductive.enums.StatusTarefaEnum;
+import jakarta.validation.constraints.NotBlank;
 
 import java.time.LocalDateTime;
 
 public class TarefaDTO {
 
+    @NotBlank(message = "Titulo é um campo obrigatório.")
     private String titulo;
     private String descricao;
     private StatusTarefaEnum status;
     private PrioridadeTarefaEnum prioridade;
     private LocalDateTime dataCriacao;
     private LocalDateTime dataConclusao;
+
+    @NotBlank(message = "Data limite é obrigatória, isso ajuda muito com a produtividade!")
     private LocalDateTime dataLimite;
+
+    @NotBlank(message = "Toda tarefa deve ser vinculada a algum usuario.")
     private int usuarioId;
 
-
+    public TarefaDTO(String titulo, String descricao, StatusTarefaEnum status, PrioridadeTarefaEnum prioridade,
+                     LocalDateTime dataCriacao, LocalDateTime dataConclusao, LocalDateTime dataLimite, int usuarioId) {
+        this.titulo = titulo;
+        this.descricao = descricao;
+        this.status = status;
+        this.prioridade = prioridade;
+        this.dataCriacao = dataCriacao;
+        this.dataConclusao = dataConclusao;
+        this.dataLimite = dataLimite;
+        this.usuarioId = usuarioId;
+    }
 
     public String getTitulo() {
         return titulo;
