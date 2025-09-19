@@ -3,6 +3,7 @@ package br.com.moreproductive.utils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,7 +35,7 @@ public class SegurancaConfig {
                     .authorizeHttpRequests(autorizacao -> autorizacao
                                     .requestMatchers(HttpMethod.POST, "api/usuarios/cadastrar")
                                     .permitAll().anyRequest().authenticated()
-                    ).httpBasic(httpBasic -> {});
+                    ).httpBasic(Customizer.withDefaults());
 
             return httpSecurity.build();
         }
