@@ -1,11 +1,28 @@
 package br.com.moreproductive.dto;
 
 import br.com.moreproductive.entities.Usuario;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 public class UsuarioDTO {
+
+    @NotBlank(message = "Nome é um campo obrigatório e precisa ser preenchido\n" +
+            "O que acha de tentar usar seu nome? Ou até mesmo um apelido!")
     private String nome;
+
+    @NotBlank(message = "E-mail é um campo obrigatório e precisa ser preenchido, vamos ajuda-lo?")
+    @Email(message = "Oops, seu e-mail está em um formato inválido.")
     private String email;
+
+    @NotBlank(message = "Parece que ouve um erro ao processar a foto do usuário. :p")
     private String fotoUrl;
+
+    @NotBlank(message = "A senha é um campo obrigatório, é sua proteção e chave na nossa aplicação! :D")
+    @Size(min= 8, message = "A senha deve ter no mínimo 8 caracteres, tente uma maior!")
+    @Pattern(regexp = "(?=.*[a-z])(?=.*[A-Z])(?=.*[$*&@#])", message = "A senha deve contar ao menos uma letra maiuscula, " +
+            "uma minuscula, e  um caractere especial!")
     private String senha;
 
     public UsuarioDTO()
