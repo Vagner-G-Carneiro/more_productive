@@ -2,6 +2,7 @@ package br.com.moreproductive.controller;
 
 import br.com.moreproductive.dto.UsuarioDTO;
 import br.com.moreproductive.service.UsuarioService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +18,7 @@ public class UsuarioController {
     }
 
     @PostMapping("/cadastrar")
-    public ResponseEntity<UsuarioDTO> cadastrar(@RequestBody UsuarioDTO usuarioDTO) {
+    public ResponseEntity<UsuarioDTO> cadastrar(@Valid @RequestBody UsuarioDTO usuarioDTO) {
         UsuarioDTO usuarioSalvo = this.usuarioService.cadastrarUsuario(usuarioDTO);
         return new ResponseEntity<>(usuarioSalvo, HttpStatus.CREATED);
     }
