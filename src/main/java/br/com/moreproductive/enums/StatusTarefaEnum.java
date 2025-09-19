@@ -5,15 +5,15 @@ public enum StatusTarefaEnum {
     PENDENTE(2),
     CONCLUIDA(3);
 
-    private final int status;
+    private final int statusNivel;
 
-    StatusTarefaEnum(int status)
+    StatusTarefaEnum(int statusNivel)
     {
-        this.status = status;
+        this.statusNivel = statusNivel;
     }
 
-    public int getOrdenacaoSimples()
+    public int getStatusNivel()
     {
-        return status;
+        return statusNivel;
     }
 }
