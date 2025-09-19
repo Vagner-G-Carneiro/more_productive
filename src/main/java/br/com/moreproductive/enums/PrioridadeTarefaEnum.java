@@ -6,15 +6,15 @@ public enum PrioridadeTarefaEnum {
     ALTA(3),
     MUITO_ALTA(4);
 
-    private final int prioridade;
+    private final int prioridadeNivel;
 
-    PrioridadeTarefaEnum(int prioridade)
+    PrioridadeTarefaEnum(int prioridadeNivel)
     {
-        this.prioridade = prioridade;
+        this.prioridadeNivel = prioridadeNivel;
     }
 
-    public int getPrioridade()
+    public int getPrioridadeNivel()
     {
-        return prioridade;
+        return prioridadeNivel;
     }
 }

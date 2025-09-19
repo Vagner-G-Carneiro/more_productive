@@ -1,11 +1,11 @@
 package br.com.moreproductive.entities;
 
+import br.com.moreproductive.dto.TarefaDTO;
 import br.com.moreproductive.enums.PrioridadeTarefaEnum;
+import br.com.moreproductive.enums.PrioridadeTarefaEnumConverter;
 import br.com.moreproductive.enums.StatusTarefaEnum;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import br.com.moreproductive.enums.StatusTarefaEnumConverter;
+import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
@@ -15,10 +15,11 @@ public class Tarefa {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-
     private String titulo;
     private String descricao;
+    @Convert(converter = StatusTarefaEnumConverter.class)
     private StatusTarefaEnum status;
+    @Convert(converter = PrioridadeTarefaEnumConverter.class)
     private PrioridadeTarefaEnum prioridade;
     private LocalDateTime dataCriacao;
     private LocalDateTime dataConclusao;
@@ -27,16 +28,16 @@ public class Tarefa {
 
     public Tarefa(){}
 
-    public Tarefa(String titulo, String descricao, StatusTarefaEnum status, PrioridadeTarefaEnum prioridade,
-                  LocalDateTime dataCriacao, LocalDateTime dataConclusao, LocalDateTime dataLimite, int usuarioId) {
-        this.titulo = titulo;
-        this.descricao = descricao;
-        this.status = status;
-        this.prioridade = prioridade;
-        this.dataCriacao = dataCriacao;
-        this.dataConclusao = dataConclusao;
-        this.dataLimite = dataLimite;
-        this.usuarioId = usuarioId;
+    public Tarefa(TarefaDTO tarefaDTO)
+    {
+        this.titulo = tarefaDTO.getTitulo();
+        this.descricao = tarefaDTO.getDescricao();
+        this.status = tarefaDTO.getStatus();
+        this.prioridade = tarefaDTO.getPrioridade();
+        this.dataCriacao = tarefaDTO.getDataCriacao();
+        this.dataConclusao = tarefaDTO.getDataConclusao();
+        this.dataLimite = tarefaDTO.getDataLimite();
+        this.usuarioId = tarefaDTO.getUsuarioId();
     }
 
     public int getId() {

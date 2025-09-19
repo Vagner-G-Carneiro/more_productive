@@ -1,8 +1,10 @@
 package br.com.moreproductive.dto;
 
+import br.com.moreproductive.entities.Tarefa;
 import br.com.moreproductive.enums.PrioridadeTarefaEnum;
 import br.com.moreproductive.enums.StatusTarefaEnum;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
 
@@ -16,11 +18,15 @@ public class TarefaDTO {
     private LocalDateTime dataCriacao;
     private LocalDateTime dataConclusao;
 
-    @NotBlank(message = "Data limite é obrigatória, isso ajuda muito com a produtividade!")
+    @NotNull(message = "Data limite é obrigatória, isso ajuda muito com a produtividade!")
     private LocalDateTime dataLimite;
 
-    @NotBlank(message = "Toda tarefa deve ser vinculada a algum usuario.")
+    @NotNull(message = "Toda tarefa deve ser vinculada a algum usuario.")
     private int usuarioId;
+
+    public TarefaDTO(){
+
+    }
 
     public TarefaDTO(String titulo, String descricao, StatusTarefaEnum status, PrioridadeTarefaEnum prioridade,
                      LocalDateTime dataCriacao, LocalDateTime dataConclusao, LocalDateTime dataLimite, int usuarioId) {
@@ -32,6 +38,18 @@ public class TarefaDTO {
         this.dataConclusao = dataConclusao;
         this.dataLimite = dataLimite;
         this.usuarioId = usuarioId;
+    }
+
+    public TarefaDTO(Tarefa tarefa)
+    {
+        this.titulo = tarefa.getTitulo();
+        this.descricao = tarefa.getDescricao();
+        this.status = tarefa.getStatus();
+        this.prioridade = tarefa.getPrioridade();
+        this.dataCriacao = tarefa.getDataCriacao();
+        this.dataConclusao = tarefa.getDataConclusao();
+        this.dataLimite = tarefa.getDataLimite();
+        this.usuarioId = tarefa.getUsuarioId();
     }
 
     public String getTitulo() {

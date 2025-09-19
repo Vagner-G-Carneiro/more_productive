@@ -1,7 +1,5 @@
-package br.com.moreproductive.utils;
+package br.com.moreproductive.exceptions;
 
-import br.com.moreproductive.exceptions.InformacaoNaoEncontradaException;
-import jakarta.el.MethodReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
