@@ -16,7 +16,6 @@ public class UsuarioDTO {
     @Email(message = "Oops, seu e-mail está em um formato inválido.")
     private String email;
 
-    @NotBlank(message = "Parece que ouve um erro ao processar a foto do usuário. :p")
     private String fotoUrl;
 
     @NotBlank(message = "A senha é um campo obrigatório, é sua proteção e chave na nossa aplicação! :D")

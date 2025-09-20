@@ -2,7 +2,10 @@ package br.com.moreproductive.dto;
 
 import br.com.moreproductive.entities.Tarefa;
 import br.com.moreproductive.enums.PrioridadeTarefaEnum;
+import br.com.moreproductive.enums.PrioridadeTarefaEnumDeserializer;
 import br.com.moreproductive.enums.StatusTarefaEnum;
+import br.com.moreproductive.enums.StatusTarefaEnumDeserializer;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -13,8 +16,13 @@ public class TarefaDTO {
     @NotBlank(message = "Titulo é um campo obrigatório.")
     private String titulo;
     private String descricao;
+
+    @JsonDeserialize(using = StatusTarefaEnumDeserializer.class)
     private StatusTarefaEnum status;
+
+    @JsonDeserialize(using = PrioridadeTarefaEnumDeserializer.class)
     private PrioridadeTarefaEnum prioridade;
+
     private LocalDateTime dataCriacao;
     private LocalDateTime dataConclusao;
 

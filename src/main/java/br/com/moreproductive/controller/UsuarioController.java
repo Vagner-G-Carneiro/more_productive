@@ -18,7 +18,7 @@ public class UsuarioController {
     }
 
     @PostMapping("/cadastrar")
-    public ResponseEntity<UsuarioDTO> cadastrar(@Valid @RequestBody UsuarioDTO usuarioDTO) {
+    public ResponseEntity<UsuarioDTO> cadastrar(@Valid @RequestBody UsuarioDTO usuarioDTO) throws Exception {
         UsuarioDTO usuarioSalvo = this.usuarioService.cadastrarUsuario(usuarioDTO);
         return new ResponseEntity<>(usuarioSalvo, HttpStatus.CREATED);
     }
@@ -61,7 +61,7 @@ public class UsuarioController {
     }
 
     @DeleteMapping("/excluir/{id}")
-    public ResponseEntity<String> excluir(@PathVariable int id) {
+    public ResponseEntity<String> excluir(@PathVariable int id) throws Exception {
         this.usuarioService.excluir(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
