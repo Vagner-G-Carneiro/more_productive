@@ -8,7 +8,9 @@ import br.com.moreproductive.exceptions.InformacaoNaoEncontradaException;
 import br.com.moreproductive.repository.TarefaRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TarefaService {
@@ -23,8 +25,13 @@ public class TarefaService {
     public TarefaDTO salvar(TarefaDTO novaTarefa) throws Exception {
         try
         {
+            novaTarefa.setDataCriacao(LocalDateTime.now());
             Tarefa tarefa = new Tarefa(novaTarefa);
             tarefa = this.tarefaRepository.save(tarefa);
+            if(tarefa.getStatus() == null || tarefa.getPrioridade() == null)
+            {
+                tarefa = this.tarefaRepository.findById(tarefa.getId());
+            }
             return new TarefaDTO(tarefa);
         } catch (Exception e) {
             throw new Exception(" Erro ao persistir tarefa no banco: " + e.getMessage());
@@ -89,5 +96,44 @@ public class TarefaService {
             throw new InformacaoNaoEncontradaException(" Nenhuma tarefa encontrada com esse critério.");
         }
         return tarefas.stream().map(tarefa -> new TarefaDTO(tarefa)).toList();
+    }
+
+    public TarefaDTO atualizarTarefa(int id, TarefaDTO tarefaAtualizadaDTO)
+    {
+        try
+        {
+            Tarefa tarefaAntiga = this.tarefaRepository.findById(id);
+            if(tarefaAntiga != null)
+            {
+                if(tarefaAtualizadaDTO.getDataCriacao() == null)
+                {
+                    tarefaAtualizadaDTO.setDataCriacao(tarefaAntiga.getDataCriacao());
+                }
+
+                Tarefa tarefaAtualizada = new Tarefa(tarefaAtualizadaDTO);
+                tarefaAtualizada.setId(id);
+                return new TarefaDTO(this.tarefaRepository.save(tarefaAtualizada));
+            } else {
+                throw new InformacaoNaoEncontradaException("Erro ao encontrar tarefa para atualizar");
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao atualizar tarefa." + e.getMessage());
+        }
+    }
+
+    public String excluirTarefa(int id)
+    {
+        try
+        {
+            Tarefa tarefa = this.tarefaRepository.findById(id);
+            if(tarefa.getClass() == null)
+            {
+                return "Tarefa não encontrada, impossivel excluir!";
+            }
+            this.tarefaRepository.deleteById(id);
+            return "Tarefa Excluida com sucesso!";
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao excluir tarefa: " + e.getMessage());
+        }
     }
 }

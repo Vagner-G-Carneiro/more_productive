@@ -1,6 +1,7 @@
 package br.com.moreproductive.controller;
 
 import br.com.moreproductive.dto.TarefaDTO;
+import br.com.moreproductive.entities.Tarefa;
 import br.com.moreproductive.enums.PrioridadeTarefaEnum;
 import br.com.moreproductive.enums.StatusTarefaEnum;
 import br.com.moreproductive.service.TarefaService;
@@ -24,7 +25,6 @@ public class TarefaController {
 
     @PostMapping("/salvar")
     public ResponseEntity<TarefaDTO> salvar(@Valid @RequestBody TarefaDTO novaTarefa) throws Exception {
-        novaTarefa.setDataCriacao(LocalDateTime.now());
         TarefaDTO tarefaSalva = this.tarefaService.salvar(novaTarefa);
         return new ResponseEntity<>(tarefaSalva, HttpStatus.CREATED);
     }
@@ -71,5 +71,20 @@ public class TarefaController {
     {
         List<TarefaDTO> tarefas = this.tarefaService.filtrarPorPrioridade(usuarioId, prioridade);
         return new ResponseEntity<>(tarefas, HttpStatus.OK);
+    }
+
+    @PutMapping("/atualizar/")
+    public ResponseEntity<TarefaDTO> atualizarTarefa(@RequestParam int id,
+                                                     @RequestBody TarefaDTO tarefaAtualizadaDTO)
+    {
+        TarefaDTO tarefaDTO = this.tarefaService.atualizarTarefa(id, tarefaAtualizadaDTO);
+        return new ResponseEntity<>(tarefaDTO, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/excluir/")
+    public ResponseEntity<String> excluirTarefa(@RequestParam int id)
+    {
+        this.tarefaService.excluirTarefa(id);
+        return new ResponseEntity<>("Excluido com sucesso!",HttpStatus.OK);
     }
 }
