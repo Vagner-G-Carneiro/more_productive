@@ -7,6 +7,7 @@ import br.com.moreproductive.exceptions.PersistenciaException;
 import br.com.moreproductive.exceptions.UsuarioException;
 import br.com.moreproductive.repository.UsuarioRepository;
 import br.com.moreproductive.utils.SegurancaConfig;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -16,10 +17,13 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final SegurancaConfig segurancaConfig;
+    private final PasswordEncoder passwordEncoder;
 
-    public UsuarioService(UsuarioRepository usuarioRepository, SegurancaConfig segurancaConfig) {
+    public UsuarioService(UsuarioRepository usuarioRepository, SegurancaConfig segurancaConfig, PasswordEncoder passwordEncoder)
+    {
         this.usuarioRepository = usuarioRepository;
         this.segurancaConfig = segurancaConfig;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public UsuarioDTO cadastrarUsuario(UsuarioDTO usuarioDTO) throws Exception {
@@ -73,11 +77,15 @@ public class UsuarioService {
         }
     }
 
-    public UsuarioDTO atualizarEmail(String email, String novoEmail) {
-        Optional <Usuario> emailDesatualizado = this.usuarioRepository.findByEmail(email);
-        if(emailDesatualizado.isPresent())
+    public UsuarioDTO atualizarEmail(String emailAntigo, String novoEmail, String senha) {
+        Optional <Usuario> usuarioEmailAntigo = this.usuarioRepository.findByEmail(emailAntigo);
+        if(usuarioEmailAntigo.isPresent())
         {
-            Usuario usuarioDesatualizado = emailDesatualizado.get();
+            Usuario usuarioDesatualizado = usuarioEmailAntigo.get();
+            if(!this.passwordEncoder.matches(senha, usuarioDesatualizado.getSenhaHash()))
+            {
+                throw new UsuarioException("Senha invalida! Troca de email não autorizada.");
+            }
             usuarioDesatualizado.setEmail(novoEmail);
             Usuario usuarioAtualizado = this.usuarioRepository.save(usuarioDesatualizado);
             return new UsuarioDTO(usuarioAtualizado);
@@ -86,17 +94,21 @@ public class UsuarioService {
         }
     }
 
-    public UsuarioDTO atualizarSenha(String email, String senha)
+    public UsuarioDTO atualizarSenha(String email, String novaSenha, String senhaAtual)
     {
-        Optional<Usuario> senhaDesatualizada = this.usuarioRepository.findByEmail(email);
-        if(senhaDesatualizada.isPresent())
+        Optional<Usuario> usuarioSenhaDesatualizada = this.usuarioRepository.findByEmail(email);
+        if(usuarioSenhaDesatualizada.isPresent())
         {
-            Usuario usuarioDesatualizado = senhaDesatualizada.get();
-            usuarioDesatualizado.setSenhaHash(this.segurancaConfig.passwordEncoder().encode(senha));
+            Usuario usuarioDesatualizado = usuarioSenhaDesatualizada.get();
+            if(!this.passwordEncoder.matches(senhaAtual, usuarioDesatualizado.getSenhaHash()))
+            {
+                throw new UsuarioException("Senha atual invalida! Troca de senha não autorizada.");
+            }
+            usuarioDesatualizado.setSenhaHash(this.segurancaConfig.passwordEncoder().encode(novaSenha));
             Usuario usuarioAtualizado = this.usuarioRepository.save(usuarioDesatualizado);
             return new UsuarioDTO(usuarioAtualizado);
         } else {
-            throw new InformacaoNaoEncontradaException("Email fornecido não foi encontrado!");
+            throw new InformacaoNaoEncontradaException("Erro ao recuperar email do usuario logado.");
         }
     }
 
