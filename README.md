@@ -17,7 +17,7 @@ simplificar e tornar mais rápido o processo de conclusão de tarefas.
 ## Back End
 - Java
 - Spring Boot
-- JPA -> Hibernate
+- JPA / Hibernate
 - Maven
 
 ## Front End
