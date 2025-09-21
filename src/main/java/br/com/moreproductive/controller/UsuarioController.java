@@ -2,10 +2,14 @@ package br.com.moreproductive.controller;
 
 import br.com.moreproductive.dto.UsuarioDTO;
 import br.com.moreproductive.service.UsuarioService;
+import br.com.moreproductive.utils.AtualizarEmailRequest;
+import br.com.moreproductive.utils.AtualizarSenhaRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -43,20 +47,17 @@ public class UsuarioController {
     }
 
     @PutMapping("/atualizar/email")
-    public ResponseEntity<UsuarioDTO> atualizarEmail(
-            @RequestParam("email") String email,
-            @RequestParam("novoEmail") String novoEmail)
+    public ResponseEntity<UsuarioDTO> atualizarEmail(AtualizarEmailRequest informacoes)
     {
-        UsuarioDTO usuario = this.usuarioService.atualizarEmail(email, novoEmail);
+        UsuarioDTO usuario = this.usuarioService.atualizarEmail(informacoes.emailAntigo(), informacoes.novoEmail(), informacoes.senha());
         return new ResponseEntity<>(usuario, HttpStatus.OK);
     }
 
     @PutMapping("/atualizar/senha")
-    public ResponseEntity<UsuarioDTO> atualizarSenha(
-            @RequestParam("email") String email,
-            @RequestParam("novaSenha") String novaSenha)
+    public ResponseEntity<UsuarioDTO> atualizarSenha(Principal principal, @RequestBody AtualizarSenhaRequest atualizarSenhaRequest)
     {
-        UsuarioDTO usuario = this.usuarioService.atualizarSenha(email, novaSenha);
+        String email = principal.getName();
+        UsuarioDTO usuario = this.usuarioService.atualizarSenha(email, atualizarSenhaRequest.novaSenha(), atualizarSenhaRequest.senhaAtual());
         return new ResponseEntity<>(usuario, HttpStatus.OK);
     }
 
