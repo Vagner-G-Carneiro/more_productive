@@ -1,15 +1,14 @@
 package br.com.moreproductive.controller;
 
 import br.com.moreproductive.dto.UsuarioDTO;
+import br.com.moreproductive.dto.UsuarioEmailUpdateDTO;
+import br.com.moreproductive.dto.UsuarioSenhaUpdateDTO;
+import br.com.moreproductive.dto.UsuarioUpdateParcialDTO;
 import br.com.moreproductive.service.UsuarioService;
-import br.com.moreproductive.utils.AtualizarEmailRequest;
-import br.com.moreproductive.utils.AtualizarSenhaRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -27,41 +26,40 @@ public class UsuarioController {
         return new ResponseEntity<>(usuarioSalvo, HttpStatus.CREATED);
     }
 
-    @GetMapping("/encontrar/id/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<UsuarioDTO> encontrarPorId(@PathVariable int id)
     {
         UsuarioDTO usuarioDTO = this.usuarioService.encontrarPorId(id);
         return new ResponseEntity<>(usuarioDTO, HttpStatus.OK);
     }
 
-    @GetMapping("/encontrar/email")
+    @GetMapping("/email")
     public ResponseEntity<UsuarioDTO> encontrarPorEmail(@RequestParam("email") String email) {
         UsuarioDTO usuarioDTO = this.usuarioService.encontrarPorEmail(email);
         return new ResponseEntity<>(usuarioDTO, HttpStatus.OK);
     }
 
-    @PutMapping("/atualizar")
-    public ResponseEntity<UsuarioDTO> atualizar(@RequestBody UsuarioDTO usuarioAtualizado) {
-        UsuarioDTO usuario = this.usuarioService.atualizar(usuarioAtualizado);
+    @PutMapping
+    public ResponseEntity<UsuarioUpdateParcialDTO> atualizar(@Valid @RequestBody UsuarioUpdateParcialDTO usuarioAtualizado) {
+        UsuarioUpdateParcialDTO usuario = this.usuarioService.atualizar(usuarioAtualizado);
         return new ResponseEntity<>(usuario, HttpStatus.OK);
     }
 
-    @PutMapping("/atualizar/email")
-    public ResponseEntity<UsuarioDTO> atualizarEmail(AtualizarEmailRequest informacoes)
+    @PutMapping("/email")
+    public ResponseEntity<UsuarioDTO> atualizarEmail(@Valid @RequestBody UsuarioEmailUpdateDTO usuarioEmailUpdateDTO)
     {
-        UsuarioDTO usuario = this.usuarioService.atualizarEmail(informacoes.emailAntigo(), informacoes.novoEmail(), informacoes.senha());
+        UsuarioDTO usuario = this.usuarioService.atualizarEmail(usuarioEmailUpdateDTO);
         return new ResponseEntity<>(usuario, HttpStatus.OK);
     }
 
-    @PutMapping("/atualizar/senha")
-    public ResponseEntity<UsuarioDTO> atualizarSenha(Principal principal, @RequestBody AtualizarSenhaRequest atualizarSenhaRequest)
+    @PutMapping("/senha")
+    public ResponseEntity<UsuarioDTO> atualizarSenha(@Valid @RequestBody UsuarioSenhaUpdateDTO usuarioSenhaUpdateDTO)
     {
-        String email = principal.getName();
-        UsuarioDTO usuario = this.usuarioService.atualizarSenha(email, atualizarSenhaRequest.novaSenha(), atualizarSenhaRequest.senhaAtual());
+        UsuarioDTO usuario = this.usuarioService.atualizarSenha(usuarioSenhaUpdateDTO);
         return new ResponseEntity<>(usuario, HttpStatus.OK);
     }
 
-    @DeleteMapping("/excluir/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<String> excluir(@PathVariable int id) throws Exception {
         this.usuarioService.excluir(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
