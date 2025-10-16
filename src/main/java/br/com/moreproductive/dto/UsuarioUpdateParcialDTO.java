@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-public class UsuarioDTO {
+public class UsuarioUpdateParcialDTO {
 
     @NotBlank(message = "Nome é um campo obrigatório e precisa ser preenchido" +
             " O que acha de tentar usar seu nome ou até mesmo um apelido!")
@@ -18,22 +18,16 @@ public class UsuarioDTO {
 
     private String fotoUrl;
 
-    @NotBlank(message = "A senha é um campo obrigatório, é sua proteção e chave na nossa aplicação! :D")
-    @Size(min= 8, message = "A senha deve ter no mínimo 8 caracteres, tente uma maior!")
-    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*[$*&@#]).{8,}$", message = "A senha deve conter ao menos uma letra maiuscula, " +
-            "uma minuscula, e  um caractere especial!")
-    private String senha;
-
-    public UsuarioDTO()
+    public UsuarioUpdateParcialDTO()
     {
 
     }
 
-    public UsuarioDTO(Usuario usuario)
+    public UsuarioUpdateParcialDTO(Usuario usuario)
     {
         this.nome = usuario.getNome();
-        this.email = usuario.getEmail();
         this.fotoUrl = usuario.getFotoUrl();
+        this.email = usuario.getEmail();
     }
 
     public String getNome() {
@@ -44,27 +38,19 @@ public class UsuarioDTO {
         this.nome = nome;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getSenha() {
-        return senha;
-    }
-
-    public void setSenha(String senha) {
-        this.senha = senha;
-    }
-
     public String getFotoUrl() {
         return fotoUrl;
     }
 
     public void setFotoUrl(String fotoUrl) {
         this.fotoUrl = fotoUrl;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }
