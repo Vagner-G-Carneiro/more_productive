@@ -24,7 +24,9 @@ public class Tarefa {
     private LocalDateTime dataCriacao;
     private LocalDateTime dataConclusao;
     private LocalDateTime dataLimite;
-    private int usuarioId;
+    @ManyToOne
+    @JoinColumn(name="usuario_id")
+    private Usuario usuario;
 
     public Tarefa(){}
 
@@ -37,7 +39,7 @@ public class Tarefa {
         this.dataCriacao = tarefaDTO.getDataCriacao();
         this.dataConclusao = tarefaDTO.getDataConclusao();
         this.dataLimite = tarefaDTO.getDataLimite();
-        this.usuarioId = tarefaDTO.getUsuarioId();
+        this.usuario = tarefaDTO.getUsuario();
     }
 
     public int getId() {
@@ -104,11 +106,11 @@ public class Tarefa {
         this.dataLimite = dataLimite;
     }
 
-    public int getUsuarioId() {
-        return usuarioId;
+    public Usuario getUsuario() {
+        return usuario;
     }
 
-    public void setUsuarioId(int usuarioId) {
-        this.usuarioId = usuarioId;
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
     }
 }

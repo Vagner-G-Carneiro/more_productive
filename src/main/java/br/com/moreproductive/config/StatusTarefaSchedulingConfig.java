@@ -1,4 +1,4 @@
-package br.com.moreproductive.utils;
+package br.com.moreproductive.config;
 
 import br.com.moreproductive.entities.Tarefa;
 import br.com.moreproductive.enums.StatusTarefaEnum;
@@ -11,10 +11,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
-public class StatusTarefaScheduling
+public class StatusTarefaSchedulingConfig
 {
-    @Autowired
     TarefaRepository tarefaRepository;
+
+    public StatusTarefaSchedulingConfig (TarefaRepository tarefaRepository)
+    {
+        this.tarefaRepository = tarefaRepository;
+    }
 
     @Scheduled(cron = "1 0 0 * * *")
     public void atualizarTarefasPendentesParaAtrasadas()

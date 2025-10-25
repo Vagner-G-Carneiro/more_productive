@@ -2,29 +2,42 @@ package br.com.moreproductive.service;
 
 import br.com.moreproductive.dto.TarefaDTO;
 import br.com.moreproductive.entities.Tarefa;
+import br.com.moreproductive.entities.Usuario;
 import br.com.moreproductive.enums.PrioridadeTarefaEnum;
 import br.com.moreproductive.enums.StatusTarefaEnum;
 import br.com.moreproductive.exceptions.InformacaoNaoEncontradaException;
+import br.com.moreproductive.exceptions.UsuarioException;
 import br.com.moreproductive.repository.TarefaRepository;
+import br.com.moreproductive.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TarefaService {
 
     private final TarefaRepository tarefaRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    public TarefaService(TarefaRepository tarefaRepository)
+    public TarefaService(TarefaRepository tarefaRepository, UsuarioRepository usuarioRepository)
     {
         this.tarefaRepository = tarefaRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
-    public TarefaDTO salvar(TarefaDTO novaTarefa) throws Exception {
+    public TarefaDTO salvar(TarefaDTO novaTarefa, String emailUsuarioLogado) throws Exception {
         try
         {
             novaTarefa.setDataCriacao(LocalDateTime.now());
+            Optional<Usuario> usuarioLogadoOpt = this.usuarioRepository.findUsuarioByEmail(emailUsuarioLogado);
+            if(usuarioLogadoOpt.isEmpty())
+            {
+                throw new UsuarioException("Erro ao recuperar usuário logado.");
+            }
+            Usuario usuarioLogado = usuarioLogadoOpt.get();
+            novaTarefa.setUsuario(usuarioLogado);
             Tarefa tarefa = new Tarefa(novaTarefa);
             tarefa = this.tarefaRepository.save(tarefa);
             if(tarefa.getStatus() == null || tarefa.getPrioridade() == null)

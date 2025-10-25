@@ -9,6 +9,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 
@@ -23,17 +24,16 @@ public class Usuario implements UserDetails {
     private String email;
     private String fotoUrl;
     private String senhaHash;
+    private Instant tokenValido;
 
-    public Usuario()
-    {
-
-    }
+    public Usuario() {}
 
     public Usuario(UsuarioDTO usuarioDTO, String senhaHash) {
         this.nome = usuarioDTO.getNome();
         this.email = usuarioDTO.getEmail();
         this.fotoUrl = usuarioDTO.getFotoUrl();
         this.senhaHash = senhaHash;
+        this.tokenValido = tokenValido;
     }
 
     @Override
@@ -105,5 +105,13 @@ public class Usuario implements UserDetails {
 
     public void setSenhaHash(String senhaHash) {
         this.senhaHash = senhaHash;
+    }
+
+    public Instant getTokenValido() {
+        return tokenValido;
+    }
+
+    public void setTokenValido(Instant tokenValido) {
+        this.tokenValido = tokenValido;
     }
 }
