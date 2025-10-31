@@ -19,7 +19,7 @@ public class JwtService {
 
         Algorithm algoritmo = Algorithm.HMAC256(senha);
 
-            return JWT.create()
+        return JWT.create()
                 .withClaim("userID", usuario.getId())
                 .withSubject(usuario.getEmail())
                 .withExpiresAt(Instant.now().plusSeconds(60000))
