@@ -22,7 +22,7 @@ public class UsuarioController {
         this.usuarioService = usuarioService;
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{usuarioAlvo}")
     public ResponseEntity<UsuarioDTO> encontrarPorId(@PathVariable int usuarioAlvo, Authentication autenticacao) {
         String usuarioLogadoEmail = autenticacao.getName();
         UsuarioDTO usuarioDTO = this.usuarioService.encontrarPorId(usuarioAlvo, usuarioLogadoEmail);
@@ -57,10 +57,10 @@ public class UsuarioController {
         return new ResponseEntity<>(new LoginResponse(token), HttpStatus.OK);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping
     public ResponseEntity<String> excluir(@Valid @RequestBody LoginRequest deletarUsuario ,Authentication autenticacao) throws Exception {
         String usuarioLogadoEmail = autenticacao.getName();
         this.usuarioService.excluir(deletarUsuario, usuarioLogadoEmail);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>("Usuário excluído com sucesso! Até outro momento :D", HttpStatus.OK);
     }
 }
