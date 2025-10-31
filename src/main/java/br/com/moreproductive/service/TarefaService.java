@@ -6,6 +6,7 @@ import br.com.moreproductive.entities.Usuario;
 import br.com.moreproductive.enums.PrioridadeTarefaEnum;
 import br.com.moreproductive.enums.StatusTarefaEnum;
 import br.com.moreproductive.exceptions.InformacaoNaoEncontradaException;
+import br.com.moreproductive.exceptions.PermissaoNegada;
 import br.com.moreproductive.exceptions.UsuarioException;
 import br.com.moreproductive.repository.TarefaRepository;
 import br.com.moreproductive.repository.UsuarioRepository;
@@ -47,12 +48,12 @@ public class TarefaService {
     }
 
     public TarefaDTO salvar(TarefaDTO novaTarefa, String usuarioLogadoEmail) {
-            Usuario usuarioLogado = this.recuperarUsuarioLogado(usuarioLogadoEmail);
-            Tarefa tarefa = new Tarefa(novaTarefa);
-            tarefa.setUsuario(usuarioLogado);
-            tarefa.setDataCriacao(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
-            this.tarefaRepository.save(tarefa);
-            return new TarefaDTO(tarefa);
+        Usuario usuarioLogado = this.recuperarUsuarioLogado(usuarioLogadoEmail);
+        Tarefa tarefa = new Tarefa(novaTarefa);
+        tarefa.setUsuario(usuarioLogado);
+        tarefa.setDataCriacao(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
+        this.tarefaRepository.save(tarefa);
+        return new TarefaDTO(tarefa);
     }
 
     public List<TarefaDTO> buscarTodas(String usuarioLogadoEmail)
@@ -112,7 +113,6 @@ public class TarefaService {
         if(this.validaPermissao(usuario, tarefa))
         {
             tarefa.setStatus(tarefaAtualizadaDTO.getStatus());
-            tarefa.setDataConclusao(tarefaAtualizadaDTO.getDataConclusao());
             tarefa.setDescricao(tarefaAtualizadaDTO.getDescricao());
             tarefa.setPrioridade(tarefaAtualizadaDTO.getPrioridade());
             tarefa.setTitulo(tarefaAtualizadaDTO.getTitulo());
@@ -123,12 +123,27 @@ public class TarefaService {
         throw new UsuarioException("Erro ao atualizar tarefa, permissão não concedida!");
     }
 
+    public TarefaDTO concluirTarefa(String usuarioLogadoEmail, int tarefaId)
+    {
+        Usuario usuarioLogado = recuperarUsuarioLogado(usuarioLogadoEmail);
+        Tarefa tarefa = this.tarefaRepository.findById(tarefaId)
+                .orElseThrow(() -> new InformacaoNaoEncontradaException("Tarefa não encontrada."));
+        if(this.validaPermissao(usuarioLogado, tarefa))
+        {
+            tarefa.setDataConclusao(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
+            tarefa.setStatus(StatusTarefaEnum.CONCLUIDA);
+            this.tarefaRepository.save(tarefa);
+            return new TarefaDTO(tarefa);
+        }
+        throw new PermissaoNegada();
+    }
+
     public void excluirTarefa(String usuarioLogadoEmail, int tarefaId)
     {
-        Usuario usuario = recuperarUsuarioLogado(usuarioLogadoEmail);
+        Usuario usuarioLogado = recuperarUsuarioLogado(usuarioLogadoEmail);
         Tarefa tarefa = this.tarefaRepository.findById(tarefaId)
                 .orElseThrow(() -> new InformacaoNaoEncontradaException("Erro ao encontrar tarefa para atualização"));
-        if(this.validaPermissao(usuario, tarefa))
+        if(this.validaPermissao(usuarioLogado, tarefa))
         {
             this.tarefaRepository.deleteById(tarefa.getId());
         }
