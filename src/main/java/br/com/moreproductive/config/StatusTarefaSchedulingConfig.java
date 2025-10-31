@@ -28,12 +28,12 @@ public class StatusTarefaSchedulingConfig
         if(tarefasAtrasadas.isEmpty())
         {
             System.out.println("Nenhuma tarefa para ser atualizada, sistema em dia! :D");
+        } else {
+            for(Tarefa tarefa : tarefasAtrasadas)
+            {
+                tarefa.setStatus(StatusTarefaEnum.ATRASADA);
+            }
+            this.tarefaRepository.saveAll(tarefasAtrasadas);
         }
-
-        for(Tarefa tarefa : tarefasAtrasadas)
-        {
-            tarefa.setStatus(StatusTarefaEnum.ATRASADA);
-        }
-        this.tarefaRepository.saveAll(tarefasAtrasadas);
     }
 }

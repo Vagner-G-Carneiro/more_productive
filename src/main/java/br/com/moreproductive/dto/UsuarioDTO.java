@@ -10,8 +10,8 @@ import java.time.Instant;
 
 public class UsuarioDTO {
 
-    @NotBlank(message = "Nome é um campo obrigatório e precisa ser preenchido" +
-            " O que acha de tentar usar seu nome ou até mesmo um apelido!")
+    @NotBlank(message = "Nome é um campo obrigatório e precisa ser preenchido." +
+            " O que acha de tentar usar seu nome ou até mesmo um apelido?")
     private String nome;
     @NotBlank(message = "E-mail é um campo obrigatório e precisa ser preenchido, vamos ajuda-lo?")
     @Email(message = "Oops, seu e-mail está em um formato inválido.")

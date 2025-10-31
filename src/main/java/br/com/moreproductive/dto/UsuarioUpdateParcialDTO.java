@@ -8,14 +8,8 @@ import jakarta.validation.constraints.Size;
 
 public class UsuarioUpdateParcialDTO {
 
-    @NotBlank(message = "Nome é um campo obrigatório e precisa ser preenchido" +
-            " O que acha de tentar usar seu nome ou até mesmo um apelido!")
+    @NotBlank(message = "Nome não pode ser vazio")
     private String nome;
-
-    @NotBlank(message = "E-mail é um campo obrigatório e precisa ser preenchido, vamos ajuda-lo?")
-    @Email(message = "Oops, seu e-mail está em um formato inválido.")
-    private String email;
-
     private String fotoUrl;
 
     public UsuarioUpdateParcialDTO()
@@ -27,7 +21,6 @@ public class UsuarioUpdateParcialDTO {
     {
         this.nome = usuario.getNome();
         this.fotoUrl = usuario.getFotoUrl();
-        this.email = usuario.getEmail();
     }
 
     public String getNome() {
@@ -44,13 +37,5 @@ public class UsuarioUpdateParcialDTO {
 
     public void setFotoUrl(String fotoUrl) {
         this.fotoUrl = fotoUrl;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 }

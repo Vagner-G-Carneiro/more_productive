@@ -6,12 +6,14 @@ import br.com.moreproductive.entities.Usuario;
 import br.com.moreproductive.enums.PrioridadeTarefaEnum;
 import br.com.moreproductive.enums.StatusTarefaEnum;
 import br.com.moreproductive.exceptions.InformacaoNaoEncontradaException;
+import br.com.moreproductive.exceptions.PermissaoNegada;
 import br.com.moreproductive.exceptions.UsuarioException;
 import br.com.moreproductive.repository.TarefaRepository;
 import br.com.moreproductive.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,125 +29,125 @@ public class TarefaService {
         this.usuarioRepository = usuarioRepository;
     }
 
-    public TarefaDTO salvar(TarefaDTO novaTarefa, String emailUsuarioLogado) throws Exception {
-        try
+    private Usuario recuperarUsuarioLogado(String usuarioLogadoEmail)
+    {
+        return this.usuarioRepository.findUsuarioByEmail(usuarioLogadoEmail)
+                .orElseThrow(() -> new UsuarioException("Erro ao recuperar usuário logado"));
+    }
+
+    private List<TarefaDTO> validarECoverterTarefas(List<Tarefa> tarefas)
+    {
+        if(tarefas.isEmpty())
         {
-            novaTarefa.setDataCriacao(LocalDateTime.now());
-            Optional<Usuario> usuarioLogadoOpt = this.usuarioRepository.findUsuarioByEmail(emailUsuarioLogado);
-            if(usuarioLogadoOpt.isEmpty())
-            {
-                throw new UsuarioException("Erro ao recuperar usuário logado.");
-            }
-            Usuario usuarioLogado = usuarioLogadoOpt.get();
-            novaTarefa.setUsuario(usuarioLogado);
-            Tarefa tarefa = new Tarefa(novaTarefa);
-            tarefa = this.tarefaRepository.save(tarefa);
-            if(tarefa.getStatus() == null || tarefa.getPrioridade() == null)
-            {
-                tarefa = this.tarefaRepository.findById(tarefa.getId());
-            }
+            throw new InformacaoNaoEncontradaException("Nenhuma tarefa encontrada para este critério.");
+        }
+        return tarefas.stream().map(tarefa -> new TarefaDTO(tarefa)).toList();
+    }
+
+    private boolean validaPermissao(Usuario usuario, Tarefa tarefa) {
+        return usuario.getEmail().equals(tarefa.getUsuario().getEmail());
+    }
+
+    public TarefaDTO salvar(TarefaDTO novaTarefa, String usuarioLogadoEmail) {
+        Usuario usuarioLogado = this.recuperarUsuarioLogado(usuarioLogadoEmail);
+        Tarefa tarefa = new Tarefa(novaTarefa);
+        tarefa.setUsuario(usuarioLogado);
+        tarefa.setDataCriacao(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
+        this.tarefaRepository.save(tarefa);
+        return new TarefaDTO(tarefa);
+    }
+
+    public List<TarefaDTO> buscarTodas(String usuarioLogadoEmail)
+    {
+        Usuario usuario = this.recuperarUsuarioLogado(usuarioLogadoEmail);
+        List<Tarefa> tarefas = this.tarefaRepository.findByUsuarioIdOrderByStatusAndPrioridadeAndDataLimite(usuario.getId());
+        return this.validarECoverterTarefas(tarefas);
+    }
+
+    public List<TarefaDTO> buscarOrdenadasDataLimite(String usuarioLogadoEmail)
+    {
+        Usuario usuario = this.recuperarUsuarioLogado(usuarioLogadoEmail);
+        List<Tarefa> tarefas = this.tarefaRepository.findByUsuarioIdOrderByDataLimite(usuario.getId());
+        return this.validarECoverterTarefas(tarefas);
+    }
+
+    public List<TarefaDTO> buscarOrdenadasDataCriacao(String usuarioLogadoEmail)
+    {
+        Usuario usuario = this.recuperarUsuarioLogado(usuarioLogadoEmail);
+        List<Tarefa> tarefas = this.tarefaRepository.findByUsuarioIdOrderByDataCriacaoDesc(usuario.getId());
+        return this.validarECoverterTarefas(tarefas);
+    }
+
+    public List<TarefaDTO> buscarOrdenadasPrioridade(String usuarioLogadoEmail)
+    {
+        Usuario usuario = this.recuperarUsuarioLogado(usuarioLogadoEmail);
+        List<Tarefa> tarefas = this.tarefaRepository.findByUsuarioIdOrderByPrioridadeDesc(usuario.getId());
+        return this.validarECoverterTarefas(tarefas);
+    }
+
+    public List<TarefaDTO> buscarOrdenadasStatus(String usuarioLogadoEmail)
+    {
+        Usuario usuario = this.recuperarUsuarioLogado(usuarioLogadoEmail);
+        List<Tarefa> tarefas = this.tarefaRepository.findByUsuarioIdOrderByStatus(usuario.getId());
+        return this.validarECoverterTarefas(tarefas);
+    }
+
+    public List<TarefaDTO> filtrarPorStatus(String usuarioLogadoEmail, StatusTarefaEnum status)
+    {
+        Usuario usuario = this.recuperarUsuarioLogado(usuarioLogadoEmail);
+        List<Tarefa> tarefas = this.tarefaRepository.findByUsuarioIdAndStatus(usuario.getId(), status);
+        return this.validarECoverterTarefas(tarefas);
+    }
+
+    public List<TarefaDTO> filtrarPorPrioridade(String usuarioLogadoEmail, PrioridadeTarefaEnum prioridade)
+    {
+        Usuario usuario = this.recuperarUsuarioLogado(usuarioLogadoEmail);
+        List<Tarefa> tarefas = this.tarefaRepository.findByUsuarioIdAndPrioridade(usuario.getId(), prioridade);
+        return this.validarECoverterTarefas(tarefas);
+    }
+
+    public TarefaDTO atualizarTarefa(String usuarioLogadoEmail, TarefaDTO tarefaAtualizadaDTO)
+    {
+        Usuario usuario = recuperarUsuarioLogado(usuarioLogadoEmail);
+        Tarefa tarefa = this.tarefaRepository.findById(tarefaAtualizadaDTO.getTarefaId())
+                .orElseThrow(() -> new InformacaoNaoEncontradaException("Erro ao encontrar tarefa para atualização"));
+        if(this.validaPermissao(usuario, tarefa))
+        {
+            tarefa.setStatus(tarefaAtualizadaDTO.getStatus());
+            tarefa.setDescricao(tarefaAtualizadaDTO.getDescricao());
+            tarefa.setPrioridade(tarefaAtualizadaDTO.getPrioridade());
+            tarefa.setTitulo(tarefaAtualizadaDTO.getTitulo());
+            tarefa.setDataLimite(tarefaAtualizadaDTO.getDataLimite());
+
+            return new TarefaDTO(tarefaRepository.save(tarefa));
+        }
+        throw new UsuarioException("Erro ao atualizar tarefa, permissão não concedida!");
+    }
+
+    public TarefaDTO concluirTarefa(String usuarioLogadoEmail, int tarefaId)
+    {
+        Usuario usuarioLogado = recuperarUsuarioLogado(usuarioLogadoEmail);
+        Tarefa tarefa = this.tarefaRepository.findById(tarefaId)
+                .orElseThrow(() -> new InformacaoNaoEncontradaException("Tarefa não encontrada."));
+        if(this.validaPermissao(usuarioLogado, tarefa))
+        {
+            tarefa.setDataConclusao(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
+            tarefa.setStatus(StatusTarefaEnum.CONCLUIDA);
+            this.tarefaRepository.save(tarefa);
             return new TarefaDTO(tarefa);
-        } catch (Exception e) {
-            throw new Exception(" Erro ao persistir tarefa no banco: " + e.getMessage());
         }
+        throw new PermissaoNegada();
     }
 
-    public List<TarefaDTO> buscarOrdenadasDataLimite(int usuarioId)
+    public void excluirTarefa(String usuarioLogadoEmail, int tarefaId)
     {
-            List<Tarefa> tarefas = this.tarefaRepository.findByUsuarioIdOrderByDataLimite(usuarioId);
-            if(tarefas.isEmpty())
-            {
-                throw new InformacaoNaoEncontradaException(" Nenhuma tarefa encontrada com esse critério.");
-            }
-            return tarefas.stream().map(tarefa -> new TarefaDTO(tarefa)).toList();
-    }
-
-    public List<TarefaDTO> buscarOrdenadasDataCriacao(int usuarioId)
-    {
-        List<Tarefa> tarefas = this.tarefaRepository.findByUsuarioIdOrderByDataCriacaoDesc(usuarioId);
-        if(tarefas.isEmpty())
+        Usuario usuarioLogado = recuperarUsuarioLogado(usuarioLogadoEmail);
+        Tarefa tarefa = this.tarefaRepository.findById(tarefaId)
+                .orElseThrow(() -> new InformacaoNaoEncontradaException("Erro ao encontrar tarefa para atualização"));
+        if(this.validaPermissao(usuarioLogado, tarefa))
         {
-            throw new InformacaoNaoEncontradaException(" Nenhuma tarefa encontrada com esse critério.");
+            this.tarefaRepository.deleteById(tarefa.getId());
         }
-        return tarefas.stream().map(tarefa -> new TarefaDTO(tarefa)).toList();
-    }
-
-    public List<TarefaDTO> buscarOrdenadasPrioridade(int usuarioId)
-    {
-        List<Tarefa> tarefas = this.tarefaRepository.findByUsuarioIdOrderByPrioridadeDesc(usuarioId);
-        if(tarefas.isEmpty())
-        {
-            throw new InformacaoNaoEncontradaException(" Nenhuma tarefa encontrada com esse critério.");
-        }
-        return tarefas.stream().map(tarefa -> new TarefaDTO(tarefa)).toList();
-    }
-
-    public List<TarefaDTO> buscarOrdenadasStatus(int usuarioId)
-    {
-        List<Tarefa> tarefas = this.tarefaRepository.findByUsuarioIdOrderByStatus(usuarioId);
-        if(tarefas.isEmpty())
-        {
-            throw new InformacaoNaoEncontradaException(" Nenhuma tarefa encontrada com esse critério.");
-        }
-        return tarefas.stream().map(tarefa -> new TarefaDTO(tarefa)).toList();
-    }
-
-    public List<TarefaDTO> filtrarPorStatus(int usuarioId, StatusTarefaEnum status)
-    {
-        List<Tarefa> tarefas = this.tarefaRepository.findByUsuarioIdAndStatus(usuarioId, status);
-        if(tarefas.isEmpty())
-        {
-            throw new InformacaoNaoEncontradaException(" Nenhuma tarefa encontrada com esse critério.");
-        }
-        return tarefas.stream().map(tarefa -> new TarefaDTO(tarefa)).toList();
-    }
-
-    public List<TarefaDTO> filtrarPorPrioridade(int usuarioId, PrioridadeTarefaEnum prioridade)
-    {
-        List<Tarefa> tarefas = this.tarefaRepository.findByUsuarioIdAndPrioridade(usuarioId, prioridade);
-        if(tarefas.isEmpty())
-        {
-            throw new InformacaoNaoEncontradaException(" Nenhuma tarefa encontrada com esse critério.");
-        }
-        return tarefas.stream().map(tarefa -> new TarefaDTO(tarefa)).toList();
-    }
-
-    public TarefaDTO atualizarTarefa(int id, TarefaDTO tarefaAtualizadaDTO)
-    {
-        try
-        {
-            Tarefa tarefaAntiga = this.tarefaRepository.findById(id);
-            if(tarefaAntiga != null)
-            {
-                if(tarefaAtualizadaDTO.getDataCriacao() == null)
-                {
-                    tarefaAtualizadaDTO.setDataCriacao(tarefaAntiga.getDataCriacao());
-                }
-
-                Tarefa tarefaAtualizada = new Tarefa(tarefaAtualizadaDTO);
-                tarefaAtualizada.setId(id);
-                return new TarefaDTO(this.tarefaRepository.save(tarefaAtualizada));
-            } else {
-                throw new InformacaoNaoEncontradaException("Erro ao encontrar tarefa para atualizar");
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Erro ao atualizar tarefa." + e.getMessage());
-        }
-    }
-
-    public String excluirTarefa(int id)
-    {
-        try
-        {
-            Tarefa tarefa = this.tarefaRepository.findById(id);
-            if(tarefa.getClass() == null)
-            {
-                return "Tarefa não encontrada, impossivel excluir!";
-            }
-            this.tarefaRepository.deleteById(id);
-            return "Tarefa Excluida com sucesso!";
-        } catch (Exception e) {
-            throw new RuntimeException("Erro ao excluir tarefa: " + e.getMessage());
-        }
+        throw new UsuarioException("Erro ao atualizar tarefa, permissão não concedida!");
     }
 }

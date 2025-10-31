@@ -21,48 +21,47 @@ public class UsuarioController {
 
     public UsuarioController(UsuarioService usuarioService, JwtService jwtService) {
         this.usuarioService = usuarioService;
-        this.jwtService = jwtService;
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<UsuarioDTO> encontrarPorId(@PathVariable int id, Authentication autenticacao) throws AccessDeniedException {
-        String usuarioLogado = autenticacao.getName();
-        UsuarioDTO usuarioDTO = this.usuarioService.encontrarPorId(id, usuarioLogado);
+    @GetMapping("/{usuarioAlvo}")
+    public ResponseEntity<UsuarioDTO> encontrarPorId(@PathVariable int usuarioAlvo, Authentication autenticacao) {
+        String usuarioLogadoEmail = autenticacao.getName();
+        UsuarioDTO usuarioDTO = this.usuarioService.encontrarPorId(usuarioAlvo, usuarioLogadoEmail);
         return new ResponseEntity<>(usuarioDTO, HttpStatus.OK);
     }
 
     @GetMapping("/email")
-    public ResponseEntity<UsuarioDTO> encontrarPorEmail(@RequestParam("email") String email, Authentication autenticacao) throws AccessDeniedException {
-        String usuarioLogado = autenticacao.getName();
-        UsuarioDTO usuarioDTO = this.usuarioService.encontrarPorEmail(email, usuarioLogado);
+    public ResponseEntity<UsuarioDTO> encontrarPorEmail(@RequestParam("email") String usuarioAlvo, Authentication autenticacao) {
+        String usuarioLogadoEmail = autenticacao.getName();
+        UsuarioDTO usuarioDTO = this.usuarioService.encontrarPorEmail(usuarioAlvo, usuarioLogadoEmail);
         return new ResponseEntity<>(usuarioDTO, HttpStatus.OK);
     }
 
     @PutMapping
-    public ResponseEntity<UsuarioUpdateParcialDTO> atualizar(@Valid @RequestBody UsuarioUpdateParcialDTO usuarioAtualizado, Authentication autenticacao) throws AccessDeniedException {
-        String usuarioLogado = autenticacao.getName();
-        UsuarioUpdateParcialDTO usuario = this.usuarioService.atualizar(usuarioAtualizado, usuarioLogado);
+    public ResponseEntity<UsuarioDTO> atualizar(@Valid @RequestBody UsuarioUpdateParcialDTO usuarioAlvo, Authentication autenticacao) {
+        String usuarioLogadoEmail = autenticacao.getName();
+        UsuarioDTO usuario = this.usuarioService.atualizar(usuarioAlvo, usuarioLogadoEmail);
         return new ResponseEntity<>(usuario, HttpStatus.OK);
     }
 
     @PutMapping("/email")
-    public ResponseEntity<LoginResponse> atualizarEmail(@Valid @RequestBody UsuarioEmailUpdateDTO usuarioEmailUpdateDTO, Authentication autenticacao) throws AccessDeniedException {
-        String usuarioLogado = autenticacao.getName();
-        String token = this.usuarioService.atualizarEmail(usuarioEmailUpdateDTO, usuarioLogado);
+    public ResponseEntity<LoginResponse> atualizarEmail(@Valid @RequestBody UsuarioEmailUpdateDTO usuarioAlvo, Authentication autenticacao) throws AccessDeniedException {
+        String usuarioLogadoEmail = autenticacao.getName();
+        String token = this.usuarioService.atualizarEmail(usuarioAlvo, usuarioLogadoEmail);
         return new ResponseEntity<>(new LoginResponse(token), HttpStatus.OK);
     }
 
     @PutMapping("/senha")
-    public ResponseEntity<LoginResponse> atualizarSenha(@Valid @RequestBody UsuarioSenhaUpdateDTO usuarioSenhaUpdateDTO, Authentication autenticacao) throws AccessDeniedException {
-        String usuarioLogado = autenticacao.getName();
-        String token = this.usuarioService.atualizarSenha(usuarioSenhaUpdateDTO, usuarioLogado);
+    public ResponseEntity<LoginResponse> atualizarSenha(@Valid @RequestBody UsuarioSenhaUpdateDTO usuarioAlvo, Authentication autenticacao) throws AccessDeniedException {
+        String usuarioLogadoEmail = autenticacao.getName();
+        String token = this.usuarioService.atualizarSenha(usuarioAlvo, usuarioLogadoEmail);
         return new ResponseEntity<>(new LoginResponse(token), HttpStatus.OK);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> excluir(@PathVariable int id,Authentication autenticacao) throws Exception {
-        String usuarioLogado = autenticacao.getName();
-        this.usuarioService.excluir(id, usuarioLogado);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    @DeleteMapping
+    public ResponseEntity<String> excluir(@Valid @RequestBody LoginRequest deletarUsuario ,Authentication autenticacao) throws Exception {
+        String usuarioLogadoEmail = autenticacao.getName();
+        this.usuarioService.excluir(deletarUsuario, usuarioLogadoEmail);
+        return new ResponseEntity<>("Usuário excluído com sucesso! Até outro momento :D", HttpStatus.OK);
     }
 }

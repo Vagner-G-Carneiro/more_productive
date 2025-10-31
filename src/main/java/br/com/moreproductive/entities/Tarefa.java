@@ -36,10 +36,8 @@ public class Tarefa {
         this.descricao = tarefaDTO.getDescricao();
         this.status = tarefaDTO.getStatus();
         this.prioridade = tarefaDTO.getPrioridade();
-        this.dataCriacao = tarefaDTO.getDataCriacao();
         this.dataConclusao = tarefaDTO.getDataConclusao();
         this.dataLimite = tarefaDTO.getDataLimite();
-        this.usuario = tarefaDTO.getUsuario();
     }
 
     public int getId() {
