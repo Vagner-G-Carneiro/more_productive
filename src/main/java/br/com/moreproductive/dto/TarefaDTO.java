@@ -1,7 +1,6 @@
 package br.com.moreproductive.dto;
 
 import br.com.moreproductive.entities.Tarefa;
-import br.com.moreproductive.entities.Usuario;
 import br.com.moreproductive.enums.PrioridadeTarefaEnum;
 import br.com.moreproductive.enums.PrioridadeTarefaEnumDeserializer;
 import br.com.moreproductive.enums.StatusTarefaEnum;
@@ -26,6 +25,7 @@ public class TarefaDTO {
     @NotNull(message = "Data limite é obrigatória, isso ajuda muito com a produtividade!")
     private LocalDateTime dataLimite;
     private int tarefaId;
+
     public TarefaDTO(){
 
     }
