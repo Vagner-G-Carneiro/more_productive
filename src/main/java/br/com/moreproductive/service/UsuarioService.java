@@ -1,19 +1,15 @@
 package br.com.moreproductive.service;
 
 import br.com.moreproductive.config.JwtService;
-import br.com.moreproductive.dto.UsuarioDTO;
-import br.com.moreproductive.dto.UsuarioEmailUpdateDTO;
-import br.com.moreproductive.dto.UsuarioSenhaUpdateDTO;
-import br.com.moreproductive.dto.UsuarioUpdateParcialDTO;
+import br.com.moreproductive.dto.*;
 import br.com.moreproductive.entities.Usuario;
-import br.com.moreproductive.exceptions.InformacaoNaoEncontradaException;
+import br.com.moreproductive.exceptions.PermissaoNegada;
 import br.com.moreproductive.exceptions.UsuarioException;
 import br.com.moreproductive.repository.UsuarioRepository;
 import br.com.moreproductive.config.SegurancaConfig;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.nio.file.AccessDeniedException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
@@ -34,6 +30,22 @@ public class UsuarioService {
         this.jwtService = jwtService;
     }
 
+    private Usuario recuperarUsuarioLogado (String usuarioLogadoEmail)
+    {
+        return this.usuarioRepository.findUsuarioByEmail(usuarioLogadoEmail)
+                .orElseThrow(() -> new UsuarioException("Erro ao recuperar usuário logado"));
+    }
+
+    private boolean altorizarRequisicaoViaEmail(String usuarioLogadoEmail, String usuarioAlvo)
+    {
+        return usuarioLogadoEmail.equals(usuarioAlvo);
+    }
+
+    private boolean altorizarRequisicaoViaId(int usuarioLogadoId, int usuarioAlvo)
+    {
+        return usuarioAlvo == usuarioLogadoId;
+    }
+
     public Usuario cadastrarUsuario(UsuarioDTO usuarioDTO) throws Exception {
         try {
             Optional<Usuario> email = this.usuarioRepository.findUsuarioByEmail(usuarioDTO.getEmail());
@@ -50,152 +62,83 @@ public class UsuarioService {
         }
     }
 
-    public UsuarioDTO encontrarPorId(int id, String usuarioLogado) throws AccessDeniedException {
-        Optional<Usuario> usuarioRequisicaoOpt = this.usuarioRepository.findUsuarioByEmail(usuarioLogado);
-        System.out.println("Email Logado => " + usuarioLogado);
-        if(usuarioRequisicaoOpt.isPresent())
+    public UsuarioDTO encontrarPorId(int usuarioAlvo, String usuarioLogadoEmail) {
+        Usuario usuarioLogado = this.recuperarUsuarioLogado(usuarioLogadoEmail);
+        if(this.altorizarRequisicaoViaId(usuarioLogado.getId(), usuarioAlvo))
         {
-            Usuario usuarioRequisicao = usuarioRequisicaoOpt.get();
-            if(usuarioRequisicao.getId() == id)
-            {
-                Optional<Usuario> usuario = this.usuarioRepository.findById(id);
-                if(usuario.isPresent())
-                {
-                    return new UsuarioDTO(usuario.get());
-                }
-                throw new UsuarioException("Erro ao buscar usuário por ID.");
-            }
-            throw new AccessDeniedException("Você não tem permissão para essa requisição!");
+            return new UsuarioDTO(this.usuarioRepository.findById(usuarioAlvo).orElseThrow(() -> new UsuarioException()));
         }
-        throw new UsuarioException("Erro ao buscar usuário logado.");
+        throw new PermissaoNegada();
     }
 
-    public UsuarioDTO encontrarPorEmail(String email, String usuarioLogado) throws AccessDeniedException {
-        Optional<Usuario> usuarioRequisicaoOpt = this.usuarioRepository.findUsuarioByEmail(usuarioLogado);
-        if(usuarioRequisicaoOpt.isPresent())
+    public UsuarioDTO encontrarPorEmail(String usuarioAlvo, String usuarioLogadoEmail) {
+        Usuario usuarioLogado = this.recuperarUsuarioLogado(usuarioLogadoEmail);
+        if(this.altorizarRequisicaoViaEmail(usuarioLogadoEmail, usuarioAlvo))
         {
-            Usuario usuarioRequisicao = usuarioRequisicaoOpt.get();
-            if(usuarioRequisicao.getEmail().equals(email))
-            {
-                Optional<Usuario> usuario = this.usuarioRepository.findUsuarioByEmail(email);
-                if(usuario.isPresent())
-                {
-                    return new UsuarioDTO(usuario.get());
-                }
-                throw new UsuarioException("Erro ao buscar usuário por e-mail.");
-            }
-            throw new AccessDeniedException("Você não tem permissão para essa requisição");
+            return new UsuarioDTO(this.usuarioRepository.findUsuarioByEmail(usuarioAlvo)
+                    .orElseThrow(() -> new UsuarioException()));
         }
-        throw new UsuarioException("Erro ao buscar usuário logado.");
+        throw new PermissaoNegada();
     }
 
-    public UsuarioUpdateParcialDTO atualizar(UsuarioUpdateParcialDTO usuarioDtoAtualizado, String usuarioLogado) throws AccessDeniedException {
-        Optional<Usuario> usuarioRequisicaoOpt = this.usuarioRepository.findUsuarioByEmail(usuarioLogado);
-        if(usuarioRequisicaoOpt.isPresent())
-        {
-            Usuario usuarioRequisicao = usuarioRequisicaoOpt.get();
-            if(usuarioRequisicao.getEmail().equals(usuarioDtoAtualizado.getEmail()))
-            {
-                Optional<Usuario> usuario = this.usuarioRepository.findUsuarioByEmail(usuarioDtoAtualizado.getEmail());
-                if(usuario.isPresent())
-                {
-                    Usuario usuarioDeveSerAtualizado = usuario.get();
-                    usuarioDeveSerAtualizado.setFotoUrl(usuarioDtoAtualizado.getFotoUrl());
-                    usuarioDeveSerAtualizado.setNome(usuarioDtoAtualizado.getNome());
-                    this.usuarioRepository.save(usuarioDeveSerAtualizado);
-                    return new UsuarioUpdateParcialDTO(usuarioDeveSerAtualizado);
-                }
-                throw new UsuarioException("Erro ao buscar usuário a ser atualizado.");
-            }
-            throw new AccessDeniedException("Você não tem permissão para essa requisição");
-        }
-        throw new UsuarioException("Erro ao buscar usuário logado.");
+    public UsuarioDTO atualizar(UsuarioUpdateParcialDTO usuarioDtoAtualizado, String usuarioLogadoEmail) {
+        Usuario usuarioLogado = this.recuperarUsuarioLogado(usuarioLogadoEmail);
+        usuarioLogado.setNome(usuarioDtoAtualizado.getNome());
+        usuarioLogado.setFotoUrl(usuarioDtoAtualizado.getFotoUrl());
+        this.usuarioRepository.save(usuarioLogado);
+        return new UsuarioDTO(usuarioLogado);
     }
 
-    public String atualizarEmail(UsuarioEmailUpdateDTO usuarioEmailUpdateDTO, String usuarioLogado) throws AccessDeniedException {
-        Optional<Usuario> usuarioRequisicaoOpt = this.usuarioRepository.findUsuarioByEmail(usuarioLogado);
-        if(usuarioRequisicaoOpt.isPresent())
+    public String atualizarEmail(UsuarioEmailUpdateDTO usuarioEmailUpdateDTO, String usuarioLogadoEmail) {
+        Usuario usuarioLogado = this.recuperarUsuarioLogado(usuarioLogadoEmail);
+        if(altorizarRequisicaoViaEmail(usuarioLogadoEmail, usuarioEmailUpdateDTO.emailAtual()))
         {
-            Optional <Usuario> usuarioAtualEmailOpt = this.usuarioRepository.findUsuarioByEmail(usuarioEmailUpdateDTO.atualEmail());
-            if(usuarioAtualEmailOpt.isPresent())
+            Optional<Usuario> emailJaCadastrado = this.usuarioRepository.findUsuarioByEmail(usuarioEmailUpdateDTO.emailNovo());
+            if(emailJaCadastrado.isPresent())
             {
-                Usuario usuarioRequisicao = usuarioRequisicaoOpt.get();
-                Usuario usuarioAtualEmail = usuarioAtualEmailOpt.get();
-                if(usuarioRequisicao.getEmail().equals(usuarioAtualEmail.getEmail()))
-                {
-                    Optional <Usuario> usuarioNovoEmail = this.usuarioRepository.findUsuarioByEmail(usuarioEmailUpdateDTO.novoEmail());
-                    if(usuarioNovoEmail.isEmpty())
-                    {
-                        if(!this.passwordEncoder.matches(usuarioEmailUpdateDTO.senha(), usuarioAtualEmail.getSenhaHash()))
-                        {
-                            throw new AccessDeniedException("Senha invalida! Troca de email não autorizada.");
-                        }
-                        usuarioAtualEmail.setEmail(usuarioEmailUpdateDTO.novoEmail());
-                        usuarioAtualEmail.setTokenValido(Instant.now().truncatedTo(ChronoUnit.SECONDS));
-                        this.usuarioRepository.save(usuarioAtualEmail);
-                        return this.jwtService.gerarToken(usuarioAtualEmail);
-                    } else {
-                        throw new UsuarioException("Erro ao atualizar email do usuario: parece que o novo e-mail já possuí registro plataforma");
-                    }
-                } else {
-                    throw new AccessDeniedException("Você não tem permissão para isso.");
-                }
-            } else{
-                throw new InformacaoNaoEncontradaException("Erro ao atualizar email do usuario: Email antigo fornecido inválido");
+                throw new UsuarioException("Já existe um usuário cadastrado com o que seria seu novo email.");
             }
-        } else {
-            throw  new UsuarioException("Erro ao buscar usuário logado");
+
+            if(!this.passwordEncoder.matches(usuarioEmailUpdateDTO.senha(), usuarioLogado.getSenhaHash()))
+            {
+                throw new PermissaoNegada("Troca de e-mail negada, senha inválida!");
+            }
+            usuarioLogado.setEmail(usuarioEmailUpdateDTO.emailNovo());
+            usuarioLogado.setTokenValido(Instant.now().truncatedTo(ChronoUnit.SECONDS));
+            this.usuarioRepository.save(usuarioLogado);
+            return jwtService.gerarToken(usuarioLogado);
         }
+        throw new PermissaoNegada();
     }
 
-    public String atualizarSenha(UsuarioSenhaUpdateDTO usuarioSenhaUpdateDTO, String usuarioLogado) throws AccessDeniedException {
-        Optional<Usuario> usuarioRequisicaoOpt = this.usuarioRepository.findUsuarioByEmail(usuarioLogado);
-        if(usuarioRequisicaoOpt.isPresent())
+    public String atualizarSenha(UsuarioSenhaUpdateDTO usuarioSenhaUpdateDTO, String usuarioLogadoEmail) {
+        Usuario usuarioLogado = this.recuperarUsuarioLogado(usuarioLogadoEmail);
+        if(altorizarRequisicaoViaEmail(usuarioLogadoEmail, usuarioSenhaUpdateDTO.email()))
         {
-            Optional<Usuario> usuarioSenhaDesatualizada = this.usuarioRepository.findUsuarioByEmail(usuarioSenhaUpdateDTO.email());
-            if(usuarioSenhaDesatualizada.isPresent())
+            if(!this.passwordEncoder.matches(usuarioSenhaUpdateDTO.senhaAtual(), usuarioLogado.getSenhaHash()))
             {
-                Usuario usuarioRequisicao = usuarioRequisicaoOpt.get();
-                Usuario usuarioDesatualizado = usuarioSenhaDesatualizada.get();
-                if(usuarioRequisicao.getEmail().equals(usuarioDesatualizado.getEmail()))
-                {
-                    if(!this.passwordEncoder.matches(usuarioSenhaUpdateDTO.senhaAtual(), usuarioDesatualizado.getSenhaHash()))
-                    {
-                        throw new UsuarioException("Senha atual invalida! Troca de senha não autorizada.");
-                    }
-                    usuarioDesatualizado.setSenhaHash(this.segurancaConfig.passwordEncoder().encode(usuarioSenhaUpdateDTO.senhaNova()));
-                    usuarioDesatualizado.setTokenValido(Instant.now().truncatedTo(ChronoUnit.SECONDS));
-                    this.usuarioRepository.save(usuarioDesatualizado);
-                    return this.jwtService.gerarToken(usuarioDesatualizado);
-                } else {
-                    throw new AccessDeniedException("Você não tem permissão para isso.");
-                }
-            } else {
-                throw new InformacaoNaoEncontradaException("Erro ao recuperar email do usuario para troca de senha.");
+                throw new PermissaoNegada("Troca de senha não permitida, senha atual inválida para a troca.");
             }
-        } else {
-            throw new UsuarioException("Erro ao buscar usuário logado");
+            usuarioLogado.setSenhaHash(this.passwordEncoder.encode(usuarioSenhaUpdateDTO.senhaNova()));
+            usuarioLogado.setTokenValido(Instant.now().truncatedTo(ChronoUnit.SECONDS));
+            this.usuarioRepository.save(usuarioLogado);
+            return jwtService.gerarToken(usuarioLogado);
         }
+        throw new PermissaoNegada();
     }
 
-    public void excluir(int id, String emailUsuarioLogado) throws Exception {
-        Optional<Usuario> usuarioLogadoOpt = this.usuarioRepository.findUsuarioByEmail(emailUsuarioLogado);
-        if(usuarioLogadoOpt.isPresent())
+    public void excluir(LoginRequest deletarUsuario, String usuarioLogadoEmail) throws Exception {
+        Usuario usuarioLogado = this.recuperarUsuarioLogado(usuarioLogadoEmail);
+        if(altorizarRequisicaoViaEmail(usuarioLogado.getEmail(), deletarUsuario.email()))
         {
-            Usuario usuarioLogado = usuarioLogadoOpt.get();
-            if(usuarioLogado.getId() == id)
+            if(!this.passwordEncoder.matches(deletarUsuario.senha(), usuarioLogado.getSenhaHash()))
             {
-                try {
-                    this.usuarioRepository.deleteById(id);
-                } catch (Exception e) {
-                    throw new Exception("Erro ao excluir: " + e.getMessage());
-                }
-            } else {
-                throw new AccessDeniedException("Você não tem permissão para isso.");
+                throw new PermissaoNegada("Erro ao apagar conta, senha inválida!");
             }
-        } else {
-            throw new UsuarioException("Erro ao buscar usuário logado.");
+            this.usuarioRepository.delete(usuarioLogado);
+            return;
         }
+        throw new PermissaoNegada();
     }
 
 }

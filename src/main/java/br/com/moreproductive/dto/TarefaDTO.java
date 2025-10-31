@@ -25,13 +25,14 @@ public class TarefaDTO {
     private LocalDateTime dataConclusao;
     @NotNull(message = "Data limite é obrigatória, isso ajuda muito com a produtividade!")
     private LocalDateTime dataLimite;
-    private Usuario usuario;
+    private int tarefaId;
+
     public TarefaDTO(){
 
     }
 
     public TarefaDTO(String titulo, String descricao, StatusTarefaEnum status, PrioridadeTarefaEnum prioridade,
-                     LocalDateTime dataCriacao, LocalDateTime dataConclusao, LocalDateTime dataLimite, Usuario usuario) {
+                     LocalDateTime dataCriacao, LocalDateTime dataConclusao, LocalDateTime dataLimite, int tarefaId) {
         this.titulo = titulo;
         this.descricao = descricao;
         this.status = status;
@@ -39,7 +40,7 @@ public class TarefaDTO {
         this.dataCriacao = dataCriacao;
         this.dataConclusao = dataConclusao;
         this.dataLimite = dataLimite;
-        this.usuario = usuario;
+        this.tarefaId = tarefaId;
     }
 
     public TarefaDTO(Tarefa tarefa)
@@ -51,7 +52,7 @@ public class TarefaDTO {
         this.dataCriacao = tarefa.getDataCriacao();
         this.dataConclusao = tarefa.getDataConclusao();
         this.dataLimite = tarefa.getDataLimite();
-        this.usuario = tarefa.getUsuario();
+        this.tarefaId = tarefa.getId();
     }
 
     public String getTitulo() {
@@ -110,11 +111,11 @@ public class TarefaDTO {
         this.dataLimite = dataLimite;
     }
 
-    public Usuario getUsuario() {
-        return usuario;
+    public int getTarefaId() {
+        return tarefaId;
     }
 
-    public void setUsuario(Usuario usuario) {
-        this.usuario = usuario;
+    public void setTarefaId(int tarefaId) {
+        this.tarefaId = tarefaId;
     }
 }
