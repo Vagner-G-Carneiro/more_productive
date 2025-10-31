@@ -138,7 +138,7 @@ public class UsuarioService {
             this.usuarioRepository.delete(usuarioLogado);
             return;
         }
-        throw new PermissaoNegada("Retornando False");
+        throw new PermissaoNegada();
     }
 
 }
