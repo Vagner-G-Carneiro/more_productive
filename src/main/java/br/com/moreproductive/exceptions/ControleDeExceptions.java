@@ -7,6 +7,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +25,12 @@ public class ControleDeExceptions
     public ResponseEntity<String> handGenericException(Exception exception)
     {
         return new ResponseEntity<>("Erro inesperado no servidor." + exception.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(PermissaoNegada.class)
+    public ResponseEntity<String> handGenericException(PermissaoNegada exception)
+    {
+        return new ResponseEntity<>("Erro de permissão." + exception.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

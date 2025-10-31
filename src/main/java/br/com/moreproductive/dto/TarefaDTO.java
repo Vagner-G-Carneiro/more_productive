@@ -1,6 +1,7 @@
 package br.com.moreproductive.dto;
 
 import br.com.moreproductive.entities.Tarefa;
+import br.com.moreproductive.entities.Usuario;
 import br.com.moreproductive.enums.PrioridadeTarefaEnum;
 import br.com.moreproductive.enums.PrioridadeTarefaEnumDeserializer;
 import br.com.moreproductive.enums.StatusTarefaEnum;
@@ -16,28 +17,21 @@ public class TarefaDTO {
     @NotBlank(message = "Titulo é um campo obrigatório.")
     private String titulo;
     private String descricao;
-
     @JsonDeserialize(using = StatusTarefaEnumDeserializer.class)
     private StatusTarefaEnum status;
-
     @JsonDeserialize(using = PrioridadeTarefaEnumDeserializer.class)
     private PrioridadeTarefaEnum prioridade;
-
     private LocalDateTime dataCriacao;
     private LocalDateTime dataConclusao;
-
     @NotNull(message = "Data limite é obrigatória, isso ajuda muito com a produtividade!")
     private LocalDateTime dataLimite;
-
-    @NotNull(message = "Toda tarefa deve ser vinculada a algum usuario.")
-    private int usuarioId;
-
+    private int tarefaId;
     public TarefaDTO(){
 
     }
 
     public TarefaDTO(String titulo, String descricao, StatusTarefaEnum status, PrioridadeTarefaEnum prioridade,
-                     LocalDateTime dataCriacao, LocalDateTime dataConclusao, LocalDateTime dataLimite, int usuarioId) {
+                     LocalDateTime dataCriacao, LocalDateTime dataConclusao, LocalDateTime dataLimite, int tarefaId) {
         this.titulo = titulo;
         this.descricao = descricao;
         this.status = status;
@@ -45,7 +39,7 @@ public class TarefaDTO {
         this.dataCriacao = dataCriacao;
         this.dataConclusao = dataConclusao;
         this.dataLimite = dataLimite;
-        this.usuarioId = usuarioId;
+        this.tarefaId = tarefaId;
     }
 
     public TarefaDTO(Tarefa tarefa)
@@ -57,7 +51,7 @@ public class TarefaDTO {
         this.dataCriacao = tarefa.getDataCriacao();
         this.dataConclusao = tarefa.getDataConclusao();
         this.dataLimite = tarefa.getDataLimite();
-        this.usuarioId = tarefa.getUsuarioId();
+        this.tarefaId = tarefa.getId();
     }
 
     public String getTitulo() {
@@ -116,13 +110,11 @@ public class TarefaDTO {
         this.dataLimite = dataLimite;
     }
 
-    public int getUsuarioId() {
-        return usuarioId;
+    public int getTarefaId() {
+        return tarefaId;
     }
 
-    public void setUsuarioId(int usuarioId) {
-        this.usuarioId = usuarioId;
+    public void setTarefaId(int tarefaId) {
+        this.tarefaId = tarefaId;
     }
-
-
 }

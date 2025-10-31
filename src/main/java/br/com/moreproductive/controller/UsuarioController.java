@@ -1,67 +1,66 @@
 package br.com.moreproductive.controller;
 
-import br.com.moreproductive.dto.UsuarioDTO;
-import br.com.moreproductive.dto.UsuarioEmailUpdateDTO;
-import br.com.moreproductive.dto.UsuarioSenhaUpdateDTO;
-import br.com.moreproductive.dto.UsuarioUpdateParcialDTO;
+import br.com.moreproductive.config.JwtService;
+import br.com.moreproductive.dto.*;
+import br.com.moreproductive.entities.Usuario;
 import br.com.moreproductive.service.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.AccessDeniedException;
+
 @RestController
-@RequestMapping("/api/usuarios")
+@RequestMapping("/api/usuario")
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
-    public UsuarioController(UsuarioService usuarioService) {
+    public UsuarioController(UsuarioService usuarioService, JwtService jwtService) {
         this.usuarioService = usuarioService;
     }
 
-    @PostMapping("/cadastrar")
-    public ResponseEntity<UsuarioDTO> cadastrar(@Valid @RequestBody UsuarioDTO usuarioDTO) throws Exception {
-        UsuarioDTO usuarioSalvo = this.usuarioService.cadastrarUsuario(usuarioDTO);
-        return new ResponseEntity<>(usuarioSalvo, HttpStatus.CREATED);
-    }
-
     @GetMapping("/{id}")
-    public ResponseEntity<UsuarioDTO> encontrarPorId(@PathVariable int id)
-    {
-        UsuarioDTO usuarioDTO = this.usuarioService.encontrarPorId(id);
+    public ResponseEntity<UsuarioDTO> encontrarPorId(@PathVariable int usuarioAlvo, Authentication autenticacao) {
+        String usuarioLogadoEmail = autenticacao.getName();
+        UsuarioDTO usuarioDTO = this.usuarioService.encontrarPorId(usuarioAlvo, usuarioLogadoEmail);
         return new ResponseEntity<>(usuarioDTO, HttpStatus.OK);
     }
 
     @GetMapping("/email")
-    public ResponseEntity<UsuarioDTO> encontrarPorEmail(@RequestParam("email") String email) {
-        UsuarioDTO usuarioDTO = this.usuarioService.encontrarPorEmail(email);
+    public ResponseEntity<UsuarioDTO> encontrarPorEmail(@RequestParam("email") String usuarioAlvo, Authentication autenticacao) {
+        String usuarioLogadoEmail = autenticacao.getName();
+        UsuarioDTO usuarioDTO = this.usuarioService.encontrarPorEmail(usuarioAlvo, usuarioLogadoEmail);
         return new ResponseEntity<>(usuarioDTO, HttpStatus.OK);
     }
 
     @PutMapping
-    public ResponseEntity<UsuarioUpdateParcialDTO> atualizar(@Valid @RequestBody UsuarioUpdateParcialDTO usuarioAtualizado) {
-        UsuarioUpdateParcialDTO usuario = this.usuarioService.atualizar(usuarioAtualizado);
+    public ResponseEntity<UsuarioDTO> atualizar(@Valid @RequestBody UsuarioUpdateParcialDTO usuarioAlvo, Authentication autenticacao) {
+        String usuarioLogadoEmail = autenticacao.getName();
+        UsuarioDTO usuario = this.usuarioService.atualizar(usuarioAlvo, usuarioLogadoEmail);
         return new ResponseEntity<>(usuario, HttpStatus.OK);
     }
 
     @PutMapping("/email")
-    public ResponseEntity<UsuarioDTO> atualizarEmail(@Valid @RequestBody UsuarioEmailUpdateDTO usuarioEmailUpdateDTO)
-    {
-        UsuarioDTO usuario = this.usuarioService.atualizarEmail(usuarioEmailUpdateDTO);
-        return new ResponseEntity<>(usuario, HttpStatus.OK);
+    public ResponseEntity<LoginResponse> atualizarEmail(@Valid @RequestBody UsuarioEmailUpdateDTO usuarioAlvo, Authentication autenticacao) throws AccessDeniedException {
+        String usuarioLogadoEmail = autenticacao.getName();
+        String token = this.usuarioService.atualizarEmail(usuarioAlvo, usuarioLogadoEmail);
+        return new ResponseEntity<>(new LoginResponse(token), HttpStatus.OK);
     }
 
     @PutMapping("/senha")
-    public ResponseEntity<UsuarioDTO> atualizarSenha(@Valid @RequestBody UsuarioSenhaUpdateDTO usuarioSenhaUpdateDTO)
-    {
-        UsuarioDTO usuario = this.usuarioService.atualizarSenha(usuarioSenhaUpdateDTO);
-        return new ResponseEntity<>(usuario, HttpStatus.OK);
+    public ResponseEntity<LoginResponse> atualizarSenha(@Valid @RequestBody UsuarioSenhaUpdateDTO usuarioAlvo, Authentication autenticacao) throws AccessDeniedException {
+        String usuarioLogadoEmail = autenticacao.getName();
+        String token = this.usuarioService.atualizarSenha(usuarioAlvo, usuarioLogadoEmail);
+        return new ResponseEntity<>(new LoginResponse(token), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> excluir(@PathVariable int id) throws Exception {
-        this.usuarioService.excluir(id);
+    public ResponseEntity<String> excluir(@Valid @RequestBody LoginRequest deletarUsuario ,Authentication autenticacao) throws Exception {
+        String usuarioLogadoEmail = autenticacao.getName();
+        this.usuarioService.excluir(deletarUsuario, usuarioLogadoEmail);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

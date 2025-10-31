@@ -1,17 +1,16 @@
 package br.com.moreproductive.service;
 
-import br.com.moreproductive.dto.UsuarioDTO;
-import br.com.moreproductive.dto.UsuarioEmailUpdateDTO;
-import br.com.moreproductive.dto.UsuarioSenhaUpdateDTO;
-import br.com.moreproductive.dto.UsuarioUpdateParcialDTO;
+import br.com.moreproductive.config.JwtService;
+import br.com.moreproductive.dto.*;
 import br.com.moreproductive.entities.Usuario;
-import br.com.moreproductive.exceptions.InformacaoNaoEncontradaException;
+import br.com.moreproductive.exceptions.PermissaoNegada;
 import br.com.moreproductive.exceptions.UsuarioException;
 import br.com.moreproductive.repository.UsuarioRepository;
-import br.com.moreproductive.utils.SegurancaConfig;
+import br.com.moreproductive.config.SegurancaConfig;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 @Service
@@ -20,112 +19,127 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final SegurancaConfig segurancaConfig;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    public UsuarioService(UsuarioRepository usuarioRepository, SegurancaConfig segurancaConfig, PasswordEncoder passwordEncoder)
+    public UsuarioService(UsuarioRepository usuarioRepository, SegurancaConfig segurancaConfig, PasswordEncoder passwordEncoder, JwtService jwtService)
     {
         this.usuarioRepository = usuarioRepository;
         this.segurancaConfig = segurancaConfig;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
-    public UsuarioDTO cadastrarUsuario(UsuarioDTO usuarioDTO) throws Exception {
-        try {
-            Optional<Usuario> email = this.usuarioRepository.findByEmail(usuarioDTO.getEmail());
+    private Usuario recuperarUsuarioLogado (String usuarioLogadoEmail)
+    {
+        return this.usuarioRepository.findUsuarioByEmail(usuarioLogadoEmail)
+                .orElseThrow(() -> new UsuarioException("Erro ao recuperar usuário logado"));
+    }
 
+    private boolean altorizarRequisicaoViaEmail(String usuarioLogadoEmail, String usuarioAlvo)
+    {
+        return usuarioLogadoEmail.equals(usuarioAlvo);
+    }
+
+    private boolean altorizarRequisicaoViaId(int usuarioLogadoId, int usuarioAlvo)
+    {
+        return usuarioAlvo == usuarioLogadoId;
+    }
+
+    public Usuario cadastrarUsuario(UsuarioDTO usuarioDTO) throws Exception {
+        try {
+            Optional<Usuario> email = this.usuarioRepository.findUsuarioByEmail(usuarioDTO.getEmail());
             if (email.isPresent())
             {
-                throw new UsuarioException(" Email já cadastrado!");
+                throw new UsuarioException("Parece que já existe uma conta para este e-mail");
             }
-
             String senhaHash = this.segurancaConfig.passwordEncoder().encode(usuarioDTO.getSenha());
             Usuario novoUsuario = new Usuario(usuarioDTO, senhaHash);
             this.usuarioRepository.save(novoUsuario);
-            return new UsuarioDTO(novoUsuario);
+            return novoUsuario;
         } catch (Exception exception) {
-            throw new Exception("Erro ao salvar usuario!" + exception.getMessage());
+            throw new Exception("Erro ao salvar usuario! " + exception.getMessage());
         }
     }
 
-    public UsuarioDTO encontrarPorId(int id) {
-        Optional<Usuario> usuarioOptional = this.usuarioRepository.findById(id);
-        if (usuarioOptional.isPresent()) {
-            Usuario usuarioEncontrado = usuarioOptional.get();
-            return new UsuarioDTO(usuarioEncontrado);
-        } else {
-            throw new InformacaoNaoEncontradaException(" Este usuario não existe!. [ID: " + id + "]");
-        }
-    }
-
-    public UsuarioDTO encontrarPorEmail(String email) {
-        Optional<Usuario> usuarioOptional = this.usuarioRepository.findByEmail(email);
-        if (usuarioOptional.isPresent()) {
-            Usuario usuarioEncontrado = usuarioOptional.get();
-            return new UsuarioDTO(usuarioEncontrado);
-        } else {
-            throw new InformacaoNaoEncontradaException("Email não cadastrado!");
-        }
-    }
-
-    public UsuarioUpdateParcialDTO atualizar(UsuarioUpdateParcialDTO usuarioDtoAtualizado) {
-        Optional<Usuario> usuarioAntigo = this.usuarioRepository.findByEmail(usuarioDtoAtualizado.getEmail());
-        if (usuarioAntigo.isPresent()) {
-            Usuario usuarioDeveSerAtualizado = usuarioAntigo.get();
-            usuarioDeveSerAtualizado.setFotoUrl(usuarioDtoAtualizado.getFotoUrl());
-            usuarioDeveSerAtualizado.setNome(usuarioDtoAtualizado.getNome());
-            this.usuarioRepository.save(usuarioDeveSerAtualizado);
-            return new UsuarioUpdateParcialDTO(usuarioDeveSerAtualizado);
-        } else {
-            throw new InformacaoNaoEncontradaException("Erro ao atualizar usuario, credencial email invalida!");
-        }
-    }
-
-    public UsuarioDTO atualizarEmail(UsuarioEmailUpdateDTO usuarioEmailUpdateDTO) {
-        Optional <Usuario> usuarioAtualEmail = this.usuarioRepository.findByEmail(usuarioEmailUpdateDTO.getAtualEmail());
-        Optional <Usuario> usuarioNovoEmail = this.usuarioRepository.findByEmail(usuarioEmailUpdateDTO.getNovoEmail());
-        if(usuarioAtualEmail.isPresent())
+    public UsuarioDTO encontrarPorId(int usuarioAlvo, String usuarioLogadoEmail) {
+        Usuario usuarioLogado = this.recuperarUsuarioLogado(usuarioLogadoEmail);
+        if(this.altorizarRequisicaoViaId(usuarioLogado.getId(), usuarioAlvo))
         {
-            if(usuarioNovoEmail.isEmpty())
-            {
-                Usuario usuarioDesatualizado = usuarioAtualEmail.get();
-                if(!this.passwordEncoder.matches(usuarioEmailUpdateDTO.getSenha(), usuarioDesatualizado.getSenhaHash()))
-                {
-                    throw new UsuarioException("Senha invalida! Troca de email não autorizada.");
-                }
-                usuarioDesatualizado.setEmail(usuarioEmailUpdateDTO.getNovoEmail());
-                Usuario usuarioAtualizado = this.usuarioRepository.save(usuarioDesatualizado);
-                return new UsuarioDTO(usuarioAtualizado);
-            } else {
-                throw new UsuarioException("Erro ao atualizar email do usuario: parece que o novo e-mail já possuí registro plataforma");
-            }
-        } else{
-            throw new InformacaoNaoEncontradaException("Erro ao atualizar email do usuario: Email antigo fornecido inválido");
+            return new UsuarioDTO(this.usuarioRepository.findById(usuarioAlvo).orElseThrow(() -> new UsuarioException()));
         }
+        throw new PermissaoNegada();
     }
 
-    public UsuarioDTO atualizarSenha(UsuarioSenhaUpdateDTO usuarioSenhaUpdateDTO)
-    {
-        Optional<Usuario> usuarioSenhaDesatualizada = this.usuarioRepository.findByEmail(usuarioSenhaUpdateDTO.getEmail());
-        if(usuarioSenhaDesatualizada.isPresent())
+    public UsuarioDTO encontrarPorEmail(String usuarioAlvo, String usuarioLogadoEmail) {
+        Usuario usuarioLogado = this.recuperarUsuarioLogado(usuarioLogadoEmail);
+        if(this.altorizarRequisicaoViaEmail(usuarioLogadoEmail, usuarioAlvo))
         {
-            Usuario usuarioDesatualizado = usuarioSenhaDesatualizada.get();
-            if(!this.passwordEncoder.matches(usuarioSenhaUpdateDTO.getSenhaAtual(), usuarioDesatualizado.getSenhaHash()))
-            {
-                throw new UsuarioException("Senha atual invalida! Troca de senha não autorizada.");
-            }
-            usuarioDesatualizado.setSenhaHash(this.segurancaConfig.passwordEncoder().encode(usuarioSenhaUpdateDTO.getSenhaNova()));
-            Usuario usuarioAtualizado = this.usuarioRepository.save(usuarioDesatualizado);
-            return new UsuarioDTO(usuarioAtualizado);
-        } else {
-            throw new InformacaoNaoEncontradaException("Erro ao recuperar email do usuario para troca de senha.");
+            return new UsuarioDTO(this.usuarioRepository.findUsuarioByEmail(usuarioAlvo)
+                    .orElseThrow(() -> new UsuarioException()));
         }
+        throw new PermissaoNegada();
     }
 
-    public void excluir(int id) throws Exception {
-        try {
-            this.usuarioRepository.deleteById(id);
-        } catch (Exception e) {
-            throw new Exception("Erro ao excluir: " + e.getMessage());
+    public UsuarioDTO atualizar(UsuarioUpdateParcialDTO usuarioDtoAtualizado, String usuarioLogadoEmail) {
+        Usuario usuarioLogado = this.recuperarUsuarioLogado(usuarioLogadoEmail);
+        if(this.altorizarRequisicaoViaEmail(usuarioLogadoEmail, usuarioDtoAtualizado.getEmail())) {
+            usuarioLogado.setNome(usuarioDtoAtualizado.getNome());
+            usuarioLogado.setFotoUrl(usuarioDtoAtualizado.getFotoUrl());
+            this.usuarioRepository.save(usuarioLogado);
+            return new UsuarioDTO(usuarioLogado);
         }
+        throw new PermissaoNegada();
+    }
+
+    public String atualizarEmail(UsuarioEmailUpdateDTO usuarioEmailUpdateDTO, String usuarioLogadoEmail) {
+        Usuario usuarioLogado = this.recuperarUsuarioLogado(usuarioLogadoEmail);
+        if(altorizarRequisicaoViaEmail(usuarioLogadoEmail, usuarioEmailUpdateDTO.atualEmail()))
+        {
+            Optional<Usuario> emailJaCadastrado = this.usuarioRepository.findUsuarioByEmail(usuarioEmailUpdateDTO.novoEmail());
+            if(emailJaCadastrado.isPresent())
+            {
+                throw new UsuarioException("Já existe um usuário cadastrado com o que seria seu novo email.");
+            }
+
+            if(!this.passwordEncoder.matches(usuarioLogado.getSenhaHash(), usuarioEmailUpdateDTO.senha()))
+            {
+                throw new PermissaoNegada("Troca de e-mail negada, senha inválida!");
+            }
+            usuarioLogado.setEmail(usuarioEmailUpdateDTO.novoEmail());
+            usuarioLogado.setTokenValido(Instant.now().truncatedTo(ChronoUnit.SECONDS));
+            this.usuarioRepository.save(usuarioLogado);
+            return jwtService.gerarToken(usuarioLogado);
+        }
+        throw new PermissaoNegada();
+    }
+
+    public String atualizarSenha(UsuarioSenhaUpdateDTO usuarioSenhaUpdateDTO, String usuarioLogadoEmail) {
+        Usuario usuarioLogado = this.recuperarUsuarioLogado(usuarioLogadoEmail);
+        if(altorizarRequisicaoViaEmail(usuarioLogadoEmail, usuarioSenhaUpdateDTO.email()))
+        {
+            if(!this.passwordEncoder.matches(usuarioLogado.getSenhaHash(), usuarioSenhaUpdateDTO.senhaAtual()))
+            {
+                throw new PermissaoNegada("Troca de senha não permitida, senha atual inválida para a troca.");
+            }
+            usuarioLogado.setSenhaHash(this.passwordEncoder.encode(usuarioSenhaUpdateDTO.senhaNova()));
+            usuarioLogado.setTokenValido(Instant.now().truncatedTo(ChronoUnit.SECONDS));
+            this.usuarioRepository.save(usuarioLogado);
+            return jwtService.gerarToken(usuarioLogado);
+        }
+        throw new PermissaoNegada();
+    }
+
+    public void excluir(LoginRequest deletarUsuario, String usuarioLogadoEmail) throws Exception {
+        Usuario usuarioLogado = this.recuperarUsuarioLogado(usuarioLogadoEmail);
+        if(altorizarRequisicaoViaEmail(usuarioLogado.getEmail(), deletarUsuario.email()))
+        {
+            if(!this.passwordEncoder.matches(usuarioLogado.getSenhaHash(), deletarUsuario.senha()))
+            {
+                throw new PermissaoNegada();
+            }
+            this.usuarioRepository.delete(usuarioLogado);
+        }
+        throw new PermissaoNegada();
     }
 
 }
