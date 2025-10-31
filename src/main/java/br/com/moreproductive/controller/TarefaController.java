@@ -79,7 +79,7 @@ public class TarefaController {
 
     @GetMapping("/filtrar/prioridade")
     public ResponseEntity<List<TarefaDTO>> filtrarPorPrioridade(Authentication autenticacao,
-                                                            @RequestParam PrioridadeTarefaEnum prioridade)
+                                                                @RequestParam PrioridadeTarefaEnum prioridade)
     {
         String usuarioLogadoEmail = autenticacao.getName();
         List<TarefaDTO> tarefas = this.tarefaService.filtrarPorPrioridade(usuarioLogadoEmail, prioridade);
@@ -92,6 +92,15 @@ public class TarefaController {
     {
         String usuarioLogadoEmail = autenticacao.getName();
         TarefaDTO tarefaDTO = this.tarefaService.atualizarTarefa(usuarioLogadoEmail, tarefaAtualizadaDTO);
+        return new ResponseEntity<>(tarefaDTO, HttpStatus.OK);
+    }
+
+    @PutMapping("/{tarefaId}")
+    public ResponseEntity<TarefaDTO> concluirTareda(Authentication autenticacao,
+                                                     @PathVariable int tarefaId)
+    {
+        String usuarioLogadoEmail = autenticacao.getName();
+        TarefaDTO tarefaDTO = this.tarefaService.concluirTarefa(usuarioLogadoEmail, tarefaId);
         return new ResponseEntity<>(tarefaDTO, HttpStatus.OK);
     }
 
