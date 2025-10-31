@@ -7,6 +7,7 @@ import br.com.moreproductive.exceptions.PermissaoNegada;
 import br.com.moreproductive.exceptions.UsuarioException;
 import br.com.moreproductive.repository.UsuarioRepository;
 import br.com.moreproductive.config.SegurancaConfig;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.time.Instant;
@@ -82,30 +83,27 @@ public class UsuarioService {
 
     public UsuarioDTO atualizar(UsuarioUpdateParcialDTO usuarioDtoAtualizado, String usuarioLogadoEmail) {
         Usuario usuarioLogado = this.recuperarUsuarioLogado(usuarioLogadoEmail);
-        if(this.altorizarRequisicaoViaEmail(usuarioLogadoEmail, usuarioDtoAtualizado.getEmail())) {
-            usuarioLogado.setNome(usuarioDtoAtualizado.getNome());
-            usuarioLogado.setFotoUrl(usuarioDtoAtualizado.getFotoUrl());
-            this.usuarioRepository.save(usuarioLogado);
-            return new UsuarioDTO(usuarioLogado);
-        }
-        throw new PermissaoNegada();
+        usuarioLogado.setNome(usuarioDtoAtualizado.getNome());
+        usuarioLogado.setFotoUrl(usuarioDtoAtualizado.getFotoUrl());
+        this.usuarioRepository.save(usuarioLogado);
+        return new UsuarioDTO(usuarioLogado);
     }
 
     public String atualizarEmail(UsuarioEmailUpdateDTO usuarioEmailUpdateDTO, String usuarioLogadoEmail) {
         Usuario usuarioLogado = this.recuperarUsuarioLogado(usuarioLogadoEmail);
-        if(altorizarRequisicaoViaEmail(usuarioLogadoEmail, usuarioEmailUpdateDTO.atualEmail()))
+        if(altorizarRequisicaoViaEmail(usuarioLogadoEmail, usuarioEmailUpdateDTO.emailAtual()))
         {
-            Optional<Usuario> emailJaCadastrado = this.usuarioRepository.findUsuarioByEmail(usuarioEmailUpdateDTO.novoEmail());
+            Optional<Usuario> emailJaCadastrado = this.usuarioRepository.findUsuarioByEmail(usuarioEmailUpdateDTO.emailNovo());
             if(emailJaCadastrado.isPresent())
             {
                 throw new UsuarioException("Já existe um usuário cadastrado com o que seria seu novo email.");
             }
 
-            if(!this.passwordEncoder.matches(usuarioLogado.getSenhaHash(), usuarioEmailUpdateDTO.senha()))
+            if(!this.passwordEncoder.matches(usuarioEmailUpdateDTO.senha(), usuarioLogado.getSenhaHash()))
             {
                 throw new PermissaoNegada("Troca de e-mail negada, senha inválida!");
             }
-            usuarioLogado.setEmail(usuarioEmailUpdateDTO.novoEmail());
+            usuarioLogado.setEmail(usuarioEmailUpdateDTO.emailNovo());
             usuarioLogado.setTokenValido(Instant.now().truncatedTo(ChronoUnit.SECONDS));
             this.usuarioRepository.save(usuarioLogado);
             return jwtService.gerarToken(usuarioLogado);
@@ -117,7 +115,7 @@ public class UsuarioService {
         Usuario usuarioLogado = this.recuperarUsuarioLogado(usuarioLogadoEmail);
         if(altorizarRequisicaoViaEmail(usuarioLogadoEmail, usuarioSenhaUpdateDTO.email()))
         {
-            if(!this.passwordEncoder.matches(usuarioLogado.getSenhaHash(), usuarioSenhaUpdateDTO.senhaAtual()))
+            if(!this.passwordEncoder.matches(usuarioSenhaUpdateDTO.senhaAtual(), usuarioLogado.getSenhaHash()))
             {
                 throw new PermissaoNegada("Troca de senha não permitida, senha atual inválida para a troca.");
             }
@@ -133,13 +131,14 @@ public class UsuarioService {
         Usuario usuarioLogado = this.recuperarUsuarioLogado(usuarioLogadoEmail);
         if(altorizarRequisicaoViaEmail(usuarioLogado.getEmail(), deletarUsuario.email()))
         {
-            if(!this.passwordEncoder.matches(usuarioLogado.getSenhaHash(), deletarUsuario.senha()))
+            if(!this.passwordEncoder.matches(deletarUsuario.senha(), usuarioLogado.getSenhaHash()))
             {
-                throw new PermissaoNegada();
+                throw new PermissaoNegada("Erro ao apagar conta, senha inválida!");
             }
             this.usuarioRepository.delete(usuarioLogado);
+            return;
         }
-        throw new PermissaoNegada();
+        throw new PermissaoNegada("Retornando False");
     }
 
 }
