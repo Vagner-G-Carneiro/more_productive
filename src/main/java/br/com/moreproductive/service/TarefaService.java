@@ -3,19 +3,18 @@ package br.com.moreproductive.service;
 import br.com.moreproductive.dto.TarefaDTO;
 import br.com.moreproductive.entities.Tarefa;
 import br.com.moreproductive.entities.Usuario;
-import br.com.moreproductive.enums.PrioridadeTarefaEnum;
 import br.com.moreproductive.enums.StatusTarefaEnum;
 import br.com.moreproductive.exceptions.InformacaoNaoEncontradaException;
 import br.com.moreproductive.exceptions.PermissaoNegada;
 import br.com.moreproductive.exceptions.UsuarioException;
 import br.com.moreproductive.repository.TarefaRepository;
 import br.com.moreproductive.repository.UsuarioRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class TarefaService {
@@ -35,16 +34,16 @@ public class TarefaService {
                 .orElseThrow(() -> new UsuarioException("Erro ao recuperar usuário logado"));
     }
 
-    private List<TarefaDTO> validarECoverterTarefas(List<Tarefa> tarefas)
+    private Page<TarefaDTO> validarECoverterTarefasDtoPage(Page<Tarefa> tarefas)
     {
         if(tarefas.isEmpty())
         {
             throw new InformacaoNaoEncontradaException("Nenhuma tarefa encontrada para este critério.");
         }
-        return tarefas.stream().map(tarefa -> new TarefaDTO(tarefa)).toList();
+        return tarefas.map(tarefa -> new TarefaDTO(tarefa));
     }
 
-    private boolean validaPermissao(Usuario usuario, Tarefa tarefa) {
+    private boolean validarPermissao(Usuario usuario, Tarefa tarefa) {
         return usuario.getEmail().equals(tarefa.getUsuario().getEmail());
     }
 
@@ -57,53 +56,11 @@ public class TarefaService {
         return new TarefaDTO(tarefa);
     }
 
-    public List<TarefaDTO> buscarTodas(String usuarioLogadoEmail)
+    public Page<TarefaDTO> buscarTarefas(String usuarioLogadoEmail, Pageable pageable)
     {
         Usuario usuario = this.recuperarUsuarioLogado(usuarioLogadoEmail);
-        List<Tarefa> tarefas = this.tarefaRepository.findByUsuarioIdOrderByStatusAndPrioridadeAndDataLimite(usuario.getId());
-        return this.validarECoverterTarefas(tarefas);
-    }
-
-    public List<TarefaDTO> buscarOrdenadasDataLimite(String usuarioLogadoEmail)
-    {
-        Usuario usuario = this.recuperarUsuarioLogado(usuarioLogadoEmail);
-        List<Tarefa> tarefas = this.tarefaRepository.findByUsuarioIdOrderByDataLimite(usuario.getId());
-        return this.validarECoverterTarefas(tarefas);
-    }
-
-    public List<TarefaDTO> buscarOrdenadasDataCriacao(String usuarioLogadoEmail)
-    {
-        Usuario usuario = this.recuperarUsuarioLogado(usuarioLogadoEmail);
-        List<Tarefa> tarefas = this.tarefaRepository.findByUsuarioIdOrderByDataCriacaoDesc(usuario.getId());
-        return this.validarECoverterTarefas(tarefas);
-    }
-
-    public List<TarefaDTO> buscarOrdenadasPrioridade(String usuarioLogadoEmail)
-    {
-        Usuario usuario = this.recuperarUsuarioLogado(usuarioLogadoEmail);
-        List<Tarefa> tarefas = this.tarefaRepository.findByUsuarioIdOrderByPrioridadeDesc(usuario.getId());
-        return this.validarECoverterTarefas(tarefas);
-    }
-
-    public List<TarefaDTO> buscarOrdenadasStatus(String usuarioLogadoEmail)
-    {
-        Usuario usuario = this.recuperarUsuarioLogado(usuarioLogadoEmail);
-        List<Tarefa> tarefas = this.tarefaRepository.findByUsuarioIdOrderByStatus(usuario.getId());
-        return this.validarECoverterTarefas(tarefas);
-    }
-
-    public List<TarefaDTO> filtrarPorStatus(String usuarioLogadoEmail, StatusTarefaEnum status)
-    {
-        Usuario usuario = this.recuperarUsuarioLogado(usuarioLogadoEmail);
-        List<Tarefa> tarefas = this.tarefaRepository.findByUsuarioIdAndStatus(usuario.getId(), status);
-        return this.validarECoverterTarefas(tarefas);
-    }
-
-    public List<TarefaDTO> filtrarPorPrioridade(String usuarioLogadoEmail, PrioridadeTarefaEnum prioridade)
-    {
-        Usuario usuario = this.recuperarUsuarioLogado(usuarioLogadoEmail);
-        List<Tarefa> tarefas = this.tarefaRepository.findByUsuarioIdAndPrioridade(usuario.getId(), prioridade);
-        return this.validarECoverterTarefas(tarefas);
+        Page<Tarefa> pageTarefasPage = this.tarefaRepository.findByUsuarioId(usuario.getId(), pageable);
+        return this.validarECoverterTarefasDtoPage(pageTarefasPage);
     }
 
     public TarefaDTO atualizarTarefa(String usuarioLogadoEmail, TarefaDTO tarefaAtualizadaDTO)
@@ -111,7 +68,7 @@ public class TarefaService {
         Usuario usuario = recuperarUsuarioLogado(usuarioLogadoEmail);
         Tarefa tarefa = this.tarefaRepository.findById(tarefaAtualizadaDTO.getTarefaId())
                 .orElseThrow(() -> new InformacaoNaoEncontradaException("Erro ao encontrar tarefa para atualização"));
-        if(this.validaPermissao(usuario, tarefa))
+        if(this.validarPermissao(usuario, tarefa))
         {
             tarefa.setStatus(tarefaAtualizadaDTO.getStatus());
             tarefa.setDescricao(tarefaAtualizadaDTO.getDescricao());
@@ -129,7 +86,7 @@ public class TarefaService {
         Usuario usuarioLogado = recuperarUsuarioLogado(usuarioLogadoEmail);
         Tarefa tarefa = this.tarefaRepository.findById(tarefaId)
                 .orElseThrow(() -> new InformacaoNaoEncontradaException("Tarefa não encontrada."));
-        if(this.validaPermissao(usuarioLogado, tarefa))
+        if(this.validarPermissao(usuarioLogado, tarefa))
         {
             tarefa.setDataConclusao(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
             tarefa.setStatus(StatusTarefaEnum.CONCLUIDA);
@@ -144,7 +101,7 @@ public class TarefaService {
         Usuario usuarioLogado = recuperarUsuarioLogado(usuarioLogadoEmail);
         Tarefa tarefa = this.tarefaRepository.findById(tarefaId)
                 .orElseThrow(() -> new InformacaoNaoEncontradaException("Erro ao encontrar tarefa para atualização"));
-        if(this.validaPermissao(usuarioLogado, tarefa))
+        if(this.validarPermissao(usuarioLogado, tarefa))
         {
             this.tarefaRepository.deleteById(tarefa.getId());
         }

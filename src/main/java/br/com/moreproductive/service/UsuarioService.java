@@ -7,7 +7,6 @@ import br.com.moreproductive.exceptions.PermissaoNegada;
 import br.com.moreproductive.exceptions.UsuarioException;
 import br.com.moreproductive.repository.UsuarioRepository;
 import br.com.moreproductive.config.SegurancaConfig;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.time.Instant;

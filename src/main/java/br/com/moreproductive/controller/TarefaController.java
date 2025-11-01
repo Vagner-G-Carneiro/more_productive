@@ -1,15 +1,17 @@
 package br.com.moreproductive.controller;
 
 import br.com.moreproductive.dto.TarefaDTO;
-import br.com.moreproductive.enums.PrioridadeTarefaEnum;
-import br.com.moreproductive.enums.StatusTarefaEnum;
 import br.com.moreproductive.service.TarefaService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.SortDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/usuario/tarefas")
@@ -29,61 +31,15 @@ public class TarefaController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TarefaDTO>> buscarTodas(Authentication autenticacao)
+    public ResponseEntity<Page<TarefaDTO>> buscarTarefas(Authentication autenticacao, @PageableDefault(page = 0, size = 30)
+            @SortDefault(sort = "status")
+            @SortDefault(sort = "prioridade", direction = Sort.Direction.DESC)
+            @SortDefault(sort = "dataLimite")
+        Pageable pageable)
     {
         String usuarioLogadoEmail = autenticacao.getName();
-        List<TarefaDTO> tarefas = this.tarefaService.buscarTodas(usuarioLogadoEmail);
-        return new ResponseEntity<>(tarefas, HttpStatus.OK);
-    }
-
-    @GetMapping("/ordenar/dataLimite")
-    public ResponseEntity<List<TarefaDTO>> buscarOrdenadasDataLimite(Authentication autenticacao)
-    {
-        String usuarioLogadoEmail = autenticacao.getName();
-        List<TarefaDTO> tarefas = this.tarefaService.buscarOrdenadasDataLimite(usuarioLogadoEmail);
-        return new ResponseEntity<>(tarefas, HttpStatus.OK);
-    }
-
-    @GetMapping("/ordenar/dataCriacao")
-    public ResponseEntity<List<TarefaDTO>> buscarOrdenasDataCriacao(Authentication autenticacao)
-    {
-        String usuarioLogadoEmail = autenticacao.getName();
-        List<TarefaDTO> tarefas = this.tarefaService.buscarOrdenadasDataCriacao(usuarioLogadoEmail);
-        return new ResponseEntity<>(tarefas, HttpStatus.OK);
-    }
-
-    @GetMapping("/ordenar/prioridade")
-    public ResponseEntity<List<TarefaDTO>> buscarOrdenasPrioridade(Authentication autenticacao)
-    {
-        String usuarioLogadoEmail = autenticacao.getName();
-        List<TarefaDTO> tarefas = this.tarefaService.buscarOrdenadasPrioridade(usuarioLogadoEmail);
-        return new ResponseEntity<>(tarefas, HttpStatus.OK);
-    }
-
-    @GetMapping("/ordenar/status")
-    public ResponseEntity<List<TarefaDTO>> buscarOrdenasStatus(Authentication autenticacao)
-    {
-        String usuarioLogadoEmail = autenticacao.getName();
-        List<TarefaDTO> tarefas = this.tarefaService.buscarOrdenadasStatus(usuarioLogadoEmail);
-        return new ResponseEntity<>(tarefas, HttpStatus.OK);
-    }
-
-    @GetMapping("/filtrar/status")
-    public ResponseEntity<List<TarefaDTO>> filtrarPorStatus(Authentication autenticacao,
-                                                            @RequestParam StatusTarefaEnum status)
-    {
-        String usuarioLogadoEmail = autenticacao.getName();
-        List<TarefaDTO> tarefas = this.tarefaService.filtrarPorStatus(usuarioLogadoEmail, status);
-        return new ResponseEntity<>(tarefas, HttpStatus.OK);
-    }
-
-    @GetMapping("/filtrar/prioridade")
-    public ResponseEntity<List<TarefaDTO>> filtrarPorPrioridade(Authentication autenticacao,
-                                                                @RequestParam PrioridadeTarefaEnum prioridade)
-    {
-        String usuarioLogadoEmail = autenticacao.getName();
-        List<TarefaDTO> tarefas = this.tarefaService.filtrarPorPrioridade(usuarioLogadoEmail, prioridade);
-        return new ResponseEntity<>(tarefas, HttpStatus.OK);
+        Page<TarefaDTO> pageTarefas = this.tarefaService.buscarTarefas(usuarioLogadoEmail, pageable);
+        return new ResponseEntity<>(pageTarefas, HttpStatus.OK);
     }
 
     @PutMapping
@@ -104,9 +60,9 @@ public class TarefaController {
         return new ResponseEntity<>(tarefaDTO, HttpStatus.OK);
     }
 
-    @DeleteMapping
+    @DeleteMapping("/{tarefaId}")
     public ResponseEntity<String> excluirTarefa(Authentication autenticacao,
-                                                @RequestParam int tarefaId)
+                                                @PathVariable int tarefaId)
     {
         String usuarioLogadoEmail = autenticacao.getName();
         this.tarefaService.excluirTarefa(usuarioLogadoEmail, tarefaId);
