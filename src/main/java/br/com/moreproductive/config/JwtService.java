@@ -1,5 +1,6 @@
 package br.com.moreproductive.config;
 
+import br.com.moreproductive.dto.JWTUserDataDTO;
 import br.com.moreproductive.entities.Usuario;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -27,14 +28,14 @@ public class JwtService {
                 .sign(algoritmo);
     }
 
-    public Optional<JWTUserData> validarToken(String token) {
+    public Optional<JWTUserDataDTO> validarToken(String token) {
         try {
 
             Algorithm algoritmo = Algorithm.HMAC256(senha);
             DecodedJWT decode = JWT.require(algoritmo)
                     .build().verify(token);
 
-            var userData = new  JWTUserData(
+            var userData = new JWTUserDataDTO(
                     decode.getClaim("userID").asInt(),
                     decode.getSubject(),
                     decode.getIssuedAtAsInstant()

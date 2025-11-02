@@ -1,5 +1,6 @@
 package br.com.moreproductive.config;
 
+import br.com.moreproductive.dto.JWTUserDataDTO;
 import br.com.moreproductive.entities.Usuario;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -32,10 +33,10 @@ public class JwtAutenticacaoFiltro extends OncePerRequestFilter {
         if(Strings.isNotEmpty(autorizacaoHeader) && autorizacaoHeader.startsWith("Bearer "))
         {
             String token = autorizacaoHeader.substring("Bearer ".length());
-            Optional<JWTUserData> optUsuario = jwtService.validarToken(token);
+            Optional<JWTUserDataDTO> optUsuario = jwtService.validarToken(token);
             if(optUsuario.isPresent())
             {
-                JWTUserData userData = optUsuario.get();
+                JWTUserDataDTO userData = optUsuario.get();
                 Usuario usuario = (Usuario) autenticacaoDetailsService.loadUserByUsername(userData.email());
                 if(usuario.getTokenValido() != null && userData.issuedAtAsInstant().isBefore(usuario.getTokenValido()))
                 {

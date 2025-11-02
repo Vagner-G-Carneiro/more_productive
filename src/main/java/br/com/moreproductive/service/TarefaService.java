@@ -5,7 +5,7 @@ import br.com.moreproductive.entities.Tarefa;
 import br.com.moreproductive.entities.Usuario;
 import br.com.moreproductive.enums.StatusTarefaEnum;
 import br.com.moreproductive.exceptions.InformacaoNaoEncontradaException;
-import br.com.moreproductive.exceptions.PermissaoNegada;
+import br.com.moreproductive.exceptions.PermissaoNegadaException;
 import br.com.moreproductive.exceptions.UsuarioException;
 import br.com.moreproductive.repository.TarefaRepository;
 import br.com.moreproductive.repository.UsuarioRepository;
@@ -93,7 +93,7 @@ public class TarefaService {
             this.tarefaRepository.save(tarefa);
             return new TarefaDTO(tarefa);
         }
-        throw new PermissaoNegada();
+        throw new PermissaoNegadaException();
     }
 
     public void excluirTarefa(String usuarioLogadoEmail, int tarefaId)

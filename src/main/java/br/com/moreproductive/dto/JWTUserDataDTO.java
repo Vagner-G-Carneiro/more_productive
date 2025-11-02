@@ -1,6 +1,6 @@
-package br.com.moreproductive.config;
+package br.com.moreproductive.dto;
 
 import java.time.Instant;
 
-public record JWTUserData(int userID, String email, Instant issuedAtAsInstant) {
+public record JWTUserDataDTO(int userID, String email, Instant issuedAtAsInstant) {
 }

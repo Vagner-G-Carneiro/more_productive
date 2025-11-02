@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RestPadraoRespostaApi {
+public class RespostaApi {
     private String type;
     private boolean successfully;
     private String title;
@@ -15,10 +15,10 @@ public class RestPadraoRespostaApi {
     private Map<String, String> errors = new HashMap<>();
     private LocalDateTime timeStamp;
 
-    RestPadraoRespostaApi(){}
+    RespostaApi(){}
 
-    public RestPadraoRespostaApi(String type, boolean successfully, String title, int status, String detail, String method,
-                                 String instance, Map<String, String> errors, LocalDateTime timeStamp) {
+    public RespostaApi(String type, boolean successfully, String title, int status, String detail, String method,
+                       String instance, Map<String, String> errors, LocalDateTime timeStamp) {
         this.type = type;
         this.successfully = successfully;
         this.title = title;

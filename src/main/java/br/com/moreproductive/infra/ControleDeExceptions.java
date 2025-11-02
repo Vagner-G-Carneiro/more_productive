@@ -1,7 +1,7 @@
 package br.com.moreproductive.infra;
 
 import br.com.moreproductive.exceptions.InformacaoNaoEncontradaException;
-import br.com.moreproductive.exceptions.PermissaoNegada;
+import br.com.moreproductive.exceptions.PermissaoNegadaException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,31 +19,34 @@ import java.util.Map;
 public class ControleDeExceptions
 {
     @ExceptionHandler(InformacaoNaoEncontradaException.class)
-    public ResponseEntity<RestPadraoRespostaApi> responderInformacaoNaoEncontradaException(InformacaoNaoEncontradaException exception, HttpServletRequest request)
+    public ResponseEntity<RespostaApi> responderInformacaoNaoEncontradaException(InformacaoNaoEncontradaException exception, HttpServletRequest request)
     {
-        RestPadraoRespostaApi respostaApi = new RestPadraoRespostaApi("marca:more-productive:informacao-nao-encontrada",
+        RespostaApi respostaApi = new RespostaApi("marca:more-productive:informacao-nao-encontrada",
                 false, "Informacao nao encontrada", 404, exception.getMessage(), request.getMethod(), request.getRequestURI(),
                 null, LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
         return new ResponseEntity<>(respostaApi, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> responderException(Exception exception)
+    public ResponseEntity<RespostaApi> responderException(Exception exception, HttpServletRequest request)
     {
-        return new ResponseEntity<>("Erro inesperado no servidor." + exception.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    @ExceptionHandler(PermissaoNegada.class)
-    public ResponseEntity<RestPadraoRespostaApi> responderPermissaoNegadaExcepion(PermissaoNegada exception,  HttpServletRequest request)
-    {
-        RestPadraoRespostaApi respostaApi = new RestPadraoRespostaApi("marca:more-productive:permissao-negada",
-                false, "Permissao Negada", 403, exception.getMessage(), request.getMethod(), request.getRequestURI(),
+        RespostaApi respostaApi = new RespostaApi("marca:more-productive:exceção:generica",
+                false, "Exceção na Aplicação", 500, exception.getMessage(), request.getMethod(), request.getRequestURI(),
                 null, LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
         return new ResponseEntity<>(respostaApi, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    @ExceptionHandler(PermissaoNegadaException.class)
+    public ResponseEntity<RespostaApi> responderPermissaoNegadaExcepion(PermissaoNegadaException exception, HttpServletRequest request)
+    {
+        RespostaApi respostaApi = new RespostaApi("marca:more-productive:permissao-negada",
+                false, "Permissao Negada", 403, exception.getMessage(), request.getMethod(), request.getRequestURI(),
+                null, LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
+        return new ResponseEntity<>(respostaApi, HttpStatus.FORBIDDEN);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<RestPadraoRespostaApi> responderMethodArgumentNotValidException(MethodArgumentNotValidException e, HttpServletRequest request)
+    public ResponseEntity<RespostaApi> responderMethodArgumentNotValidException(MethodArgumentNotValidException e, HttpServletRequest request)
     {
 
         Map<String, String> errosDeValidacao = new HashMap<>();
@@ -53,7 +56,7 @@ public class ControleDeExceptions
             errosDeValidacao.put(campoInvalido, menssagemErro);
         });
 
-        RestPadraoRespostaApi respostaApi = new RestPadraoRespostaApi(
+        RespostaApi respostaApi = new RespostaApi(
                 "marca:more-productive:erro-validacao",false, "Campos inválidos", 400, "Um ou mais campos foram negados pela API por falta de coerência com as regras de negócio",
                 request.getMethod(), request.getRequestURI(), errosDeValidacao,LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
         );

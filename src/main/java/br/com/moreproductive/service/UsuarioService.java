@@ -3,7 +3,7 @@ package br.com.moreproductive.service;
 import br.com.moreproductive.config.JwtService;
 import br.com.moreproductive.dto.*;
 import br.com.moreproductive.entities.Usuario;
-import br.com.moreproductive.exceptions.PermissaoNegada;
+import br.com.moreproductive.exceptions.PermissaoNegadaException;
 import br.com.moreproductive.exceptions.UsuarioException;
 import br.com.moreproductive.repository.UsuarioRepository;
 import br.com.moreproductive.config.SegurancaConfig;
@@ -67,7 +67,7 @@ public class UsuarioService {
         {
             return new UsuarioDTO(this.usuarioRepository.findById(usuarioAlvo).orElseThrow(() -> new UsuarioException()));
         }
-        throw new PermissaoNegada();
+        throw new PermissaoNegadaException();
     }
 
     public UsuarioDTO encontrarPorEmail(String usuarioAlvo, String usuarioLogadoEmail) {
@@ -77,7 +77,7 @@ public class UsuarioService {
             return new UsuarioDTO(this.usuarioRepository.findUsuarioByEmail(usuarioAlvo)
                     .orElseThrow(() -> new UsuarioException()));
         }
-        throw new PermissaoNegada();
+        throw new PermissaoNegadaException();
     }
 
     public UsuarioDTO atualizar(UsuarioUpdateParcialDTO usuarioDtoAtualizado, String usuarioLogadoEmail) {
@@ -100,14 +100,14 @@ public class UsuarioService {
 
             if(!this.passwordEncoder.matches(usuarioEmailUpdateDTO.senha(), usuarioLogado.getSenhaHash()))
             {
-                throw new PermissaoNegada("Troca de e-mail negada, senha inválida!");
+                throw new PermissaoNegadaException("Troca de e-mail negada, senha inválida!");
             }
             usuarioLogado.setEmail(usuarioEmailUpdateDTO.emailNovo());
             usuarioLogado.setTokenValido(Instant.now().truncatedTo(ChronoUnit.SECONDS));
             this.usuarioRepository.save(usuarioLogado);
             return jwtService.gerarToken(usuarioLogado);
         }
-        throw new PermissaoNegada();
+        throw new PermissaoNegadaException();
     }
 
     public String atualizarSenha(UsuarioSenhaUpdateDTO usuarioSenhaUpdateDTO, String usuarioLogadoEmail) {
@@ -116,14 +116,14 @@ public class UsuarioService {
         {
             if(!this.passwordEncoder.matches(usuarioSenhaUpdateDTO.senhaAtual(), usuarioLogado.getSenhaHash()))
             {
-                throw new PermissaoNegada("Troca de senha não permitida, senha atual inválida para a troca.");
+                throw new PermissaoNegadaException("Troca de senha não permitida, senha atual inválida para a troca.");
             }
             usuarioLogado.setSenhaHash(this.passwordEncoder.encode(usuarioSenhaUpdateDTO.senhaNova()));
             usuarioLogado.setTokenValido(Instant.now().truncatedTo(ChronoUnit.SECONDS));
             this.usuarioRepository.save(usuarioLogado);
             return jwtService.gerarToken(usuarioLogado);
         }
-        throw new PermissaoNegada();
+        throw new PermissaoNegadaException();
     }
 
     public void excluir(LoginRequest deletarUsuario, String usuarioLogadoEmail) throws Exception {
@@ -132,12 +132,12 @@ public class UsuarioService {
         {
             if(!this.passwordEncoder.matches(deletarUsuario.senha(), usuarioLogado.getSenhaHash()))
             {
-                throw new PermissaoNegada("Erro ao apagar conta, senha inválida!");
+                throw new PermissaoNegadaException("Erro ao apagar conta, senha inválida!");
             }
             this.usuarioRepository.delete(usuarioLogado);
             return;
         }
-        throw new PermissaoNegada();
+        throw new PermissaoNegadaException();
     }
 
 }
