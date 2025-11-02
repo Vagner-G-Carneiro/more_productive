@@ -3,7 +3,6 @@ package br.com.moreproductive.config;
 import br.com.moreproductive.entities.Tarefa;
 import br.com.moreproductive.enums.StatusTarefaEnum;
 import br.com.moreproductive.repository.TarefaRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 

@@ -2,7 +2,6 @@ package br.com.moreproductive.controller;
 
 import br.com.moreproductive.config.JwtService;
 import br.com.moreproductive.dto.*;
-import br.com.moreproductive.entities.Usuario;
 import br.com.moreproductive.service.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

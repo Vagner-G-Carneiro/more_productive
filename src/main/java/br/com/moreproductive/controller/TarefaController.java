@@ -52,8 +52,8 @@ public class TarefaController {
     }
 
     @PutMapping("/{tarefaId}")
-    public ResponseEntity<TarefaDTO> concluirTareda(Authentication autenticacao,
-                                                     @PathVariable int tarefaId)
+    public ResponseEntity<TarefaDTO> concluirTarefa(Authentication autenticacao,
+                                                    @PathVariable int tarefaId)
     {
         String usuarioLogadoEmail = autenticacao.getName();
         TarefaDTO tarefaDTO = this.tarefaService.concluirTarefa(usuarioLogadoEmail, tarefaId);
